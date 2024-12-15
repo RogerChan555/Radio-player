@@ -44,3 +44,4 @@ public/schedule/*
 !public/artists/.gitkeep
 docker-git-token
 docker image storage git access token
+.git_old
