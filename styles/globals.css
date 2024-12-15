@@ -1,0 +1,203 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html,
+body {
+  padding: 0;
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Oxygen,
+    Ubuntu, Cantarell, Fira Sans, Droid Sans, Helvetica Neue, sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.playerBGContainer {
+  background: linear-gradient(-45deg, #ee7752, #e73c7e, #23a6d5, #23d5ab);
+  background-size: 400% 400%;
+  animation: gradient 15s ease infinite;
+}
+
+.break-words {
+  word-break: break-word;
+}
+
+table.sortable.isSorting td:last-child {
+  display: none;
+}
+
+.relative:hover .social-icons {
+  opacity: 1;
+}
+
+.social-icons {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.social-icons-desktop-box{
+  flex-direction: column;
+  background-color: rgba(255,255,255,0.66);
+}
+@media(max-width: 1023px) {
+  .social-icons-mobile-box{
+    flex-direction: column;
+    background-color: rgba(255,255,255,0.66);
+    display: flex;
+  }
+}
+.text-green-600{
+  --tw-text-opacity: 1;
+  color: rgb(22 163 74/var(--tw-text-opacity,1));
+}
+
+
+.flex-column{
+  flex-direction: column;
+}
+.copy-preview{
+  padding-bottom:56.25%;
+  position:relative;
+  display:block;
+  width: 100%;
+}
+.copy-iframe{
+   position:absolute;
+   top:0;
+   left:0;
+}
+.copy-header{
+  margin-left: 24px;
+  justify-content: space-between;
+  font-size: 24px;
+}
+.copy-p{
+  margin: 10px 24px;
+}
+.copy-input{
+  border: 1px solid #DDD;
+  height: 150px;
+  margin-bottom: 5px;
+}
+.copy-button{
+  align-self: flex-end;
+  background: #065fd4;
+  border-radius: 1000px;
+  padding: 10px 16px;
+}
+
+.drop-shadow-888 {
+  filter: drop-shadow(0 0px 4px #888) drop-shadow(0 0px 1px #888);
+}
+
+@keyframes gradient {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 240 10% 3.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 240 10% 3.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 240 10% 3.9%;
+
+    --primary: 240 5.9% 10%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 240 4.8% 95.9%;
+    --secondary-foreground: 240 5.9% 10%;
+
+    --muted: 240 4.8% 95.9%;
+    --muted-foreground: 240 3.8% 46.1%;
+
+    --accent: 240 4.8% 95.9%;
+    --accent-foreground: 240 5.9% 10%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 5.9% 90%;
+    --input: 240 5.9% 90%;
+    --ring: 240 10% 3.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 240 10% 3.9%;
+    --foreground: 0 0% 98%;
+
+    --card: 240 10% 3.9%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 240 10% 3.9%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 0 0% 98%;
+    --primary-foreground: 240 5.9% 10%;
+
+    --secondary: 240 3.7% 15.9%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 240 3.7% 15.9%;
+    --muted-foreground: 240 5% 64.9%;
+
+    --accent: 240 3.7% 15.9%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 240 3.7% 15.9%;
+    --input: 240 3.7% 15.9%;
+    --ring: 240 4.9% 83.9%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.embla__container {
+  transition: height 0.2s;
+  display: flex;
+  align-items: flex-start; /* Add this */
+}
+
+/* Custom scrollbar styles */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-black;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-gray-300;
+  border-radius: 6px;
+}

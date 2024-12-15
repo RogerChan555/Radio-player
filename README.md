@@ -111,4 +111,3 @@ DB_NAME=XXXXXXXXXXXXXXXXXXXXX
    ```
 
 5. **Open your browser and navigate to `http://your-vps-ip:3000`**
-

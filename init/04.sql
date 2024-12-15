@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS artists (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    artistId VARCHAR(50),
+    refUrl VARCHAR(512) NULL,
+    image VARCHAR(512)
+);

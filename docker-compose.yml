@@ -1,0 +1,45 @@
+# services:
+#   nextjs:
+#     build:
+#       context: .
+#       dockerfile: Dockerfile
+#     ports:
+#       - "3000:3000"
+#     extra_hosts:
+#       - "database:64.91.224.123"
+#     environment:
+#       - APP_URL=http://listen.eternityready.com
+#       - NEXT_PUBLIC_APP_URL=http://listen.eternityready.com
+#       - DB_HOST=database
+#       - DB_PORT=3306
+#       - DB_USERNAME=eternity_docker
+#       - DB_PASSWORD="^*!*P5hGxe-Q*b"
+#       - DB_NAME=eternity
+#     restart: always
+#     depends_on:
+#       - nextmysql
+#     volumes:
+#       - ./public:/app/public
+
+#   nextmysql:
+#     image: mysql:latest
+#     restart: always
+#     environment:
+#       MYSQL_ROOT_PASSWORD: "eternity"
+#       MYSQL_DATABASE: "eternity"
+#       MYSQL_USER: "eternity"
+#       MYSQL_PASSWORD: "eternity"
+#     ports:
+#       - "3306:3306"
+#     volumes:
+#       - ./init:/docker-entrypoint-initdb.d
+
+#   nextphpmyadmin:
+#     image: phpmyadmin/phpmyadmin
+#     ports:
+#       - "4080:80"
+#     environment:
+#       TZ: Asia/Kolkata
+#       PMA_HOST: nextmysql
+#     depends_on:
+#       - nextmysql

@@ -1,0 +1,60 @@
+.volumeControlContainer {
+  display: flex;
+  align-items: center;
+  margin-top: 10px;
+  gap: 10px;
+}
+
+.muteButton {
+  background: none;
+  color: #ffffff;
+  outline: none;
+  border: none;
+}
+
+/*Chrome*/
+@media screen and (-webkit-min-device-pixel-ratio: 0) {
+  .volumeControl {
+    overflow: hidden;
+    width: 150px;
+    height: 4px;
+    -webkit-appearance: none;
+    appearance: none;
+    background-color: rgb(196, 196, 196, 0.5);
+    cursor: pointer;
+    border-radius: 2px;
+  }
+
+  .volumeControl::-webkit-slider-runnable-track {
+    height: 4px;
+    -webkit-appearance: none;
+    color: #ffffff;
+    margin-top: -1px;
+  }
+
+  .volumeControl::-webkit-slider-thumb {
+    width: 4px;
+    -webkit-appearance: none;
+    height: 4px;
+    cursor: ew-resize;
+    background: #ffffff;
+    box-shadow: -80px 0 0 80px #ffffff;
+    cursor: -moz-pointer;
+    cursor: -webkit-pointer;
+    cursor: pointer;
+  }
+}
+/** FF*/
+.volumeControl::-moz-range-progress {
+  background-color: #ffffff;
+}
+.volumeControl::-moz-range-track {
+  background-color: #c4c4c4;
+}
+/* IE*/
+.volumeControl::-ms-fill-lower {
+  background-color: #ffffff;
+}
+.volumeControl::-ms-fill-upper {
+  background-color: #c4c4c4;
+}
