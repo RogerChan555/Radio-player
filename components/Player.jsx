@@ -248,7 +248,7 @@ const Player = () => {
 
   return (
     <section className="mx-4 rounded-4xl md:mx-8">
-      <div className="relative flex min-h-[205px] items-end rounded-2xl bg-black/25 bg-cover bg-center bg-no-repeat p-4 drop-shadow-2xl sm:min-h-[400px] md:p-8 lg:min-h-[670px] lg:rounded-[35px]">
+      <div className="bg-img-box relative flex min-h-[205px] items-end rounded-2xl bg-black/25 bg-cover bg-center bg-no-repeat p-4 drop-shadow-2xl sm:min-h-[400px] md:p-8 lg:min-h-[670px] lg:rounded-[35px]">
         <div className="relative flex w-full justify-between z-50">
           <a
             target="_blank"
@@ -307,7 +307,7 @@ const Player = () => {
                     aria-label="Visit TikTok Profile"
                     className="text-blue-600  hover:text-blue-600"
                   >
-                    
+
                     {/*<Image src="/public/tiktok.svg" alt="" height={23} width={23}/>*/}
                     <Image src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IS0tIFVwbG9hZGVkIHRvOiBTVkcgUmVwbywgd3d3LnN2Z3JlcG8uY29tLCBHZW5lcmF0b3I6IFNWRyBSZXBvIE1peGVyIFRvb2xzIC0tPgo8c3ZnIGZpbGw9IiMyNTYzRUIiIHdpZHRoPSI4MDBweCIgaGVpZ2h0PSI4MDBweCIgdmlld0JveD0iMCAwIDI0IDI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiPjxwYXRoIGQ9Ik0xOS41ODkgNi42ODZhNC43OTMgNC43OTMgMCAwIDEtMy43Ny00LjI0NVYyaC0zLjQ0NXYxMy42NzJhMi44OTYgMi44OTYgMCAwIDEtNS4yMDEgMS43NDNsLS4wMDItLjAwMS4wMDIuMDAxYTIuODk1IDIuODk1IDAgMCAxIDMuMTgzLTQuNTF2LTMuNWE2LjMyOSA2LjMyOSAwIDAgMC01LjM5NCAxMC42OTIgNi4zMyA2LjMzIDAgMCAwIDEwLjg1Ny00LjQyNFY4LjY4N2E4LjE4MiA4LjE4MiAwIDAgMCA0Ljc3MyAxLjUyNlY2Ljc5YTQuODMxIDQuODMxIDAgMCAxLTEuMDAzLS4xMDR6Ii8+PC9zdmc+"
                     alt="" height={23} width={23}/>
@@ -464,7 +464,7 @@ const Player = () => {
                     aria-label="Visit TikTok Profile"
                     className="text-blue-600  hover:text-blue-600"
                   >
-                    
+
                     {/*<Image src="/public/tiktok.svg" alt="" height={23} width={23}/>*/}
                     <Image src="data:image/svg+xml;base64,PD94bWwgdmVyc2lvbj0iMS4wIiBlbmNvZGluZz0idXRmLTgiPz48IS0tIFVwbG9hZGVkIHRvOiBTVkcgUmVwbywgd3d3LnN2Z3JlcG8uY29tLCBHZW5lcmF0b3I6IFNWRyBSZXBvIE1peGVyIFRvb2xzIC0tPgo8c3ZnIGZpbGw9IiMyNTYzRUIiIHdpZHRoPSI4MDBweCIgaGVpZ2h0PSI4MDBweCIgdmlld0JveD0iMCAwIDI0IDI0IiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHhtbDpzcGFjZT0icHJlc2VydmUiPjxwYXRoIGQ9Ik0xOS41ODkgNi42ODZhNC43OTMgNC43OTMgMCAwIDEtMy43Ny00LjI0NVYyaC0zLjQ0NXYxMy42NzJhMi44OTYgMi44OTYgMCAwIDEtNS4yMDEgMS43NDNsLS4wMDItLjAwMS4wMDIuMDAxYTIuODk1IDIuODk1IDAgMCAxIDMuMTgzLTQuNTF2LTMuNWE2LjMyOSA2LjMyOSAwIDAgMC01LjM5NCAxMC42OTIgNi4zMyA2LjMzIDAgMCAwIDEwLjg1Ny00LjQyNFY4LjY4N2E4LjE4MiA4LjE4MiAwIDAgMCA0Ljc3MyAxLjUyNlY2Ljc5YTQuODMxIDQuODMxIDAgMCAxLTEuMDAzLS4xMDR6Ii8+PC9zdmc+"
                     alt="" height={23} width={23}/>

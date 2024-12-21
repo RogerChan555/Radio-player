@@ -51,6 +51,7 @@ table.sortable.isSorting td:last-child {
     flex-direction: column;
     background-color: rgba(255,255,255,0.66);
     display: flex;
+    z-index: 9;
   }
 }
 .text-green-600{
@@ -99,13 +100,13 @@ table.sortable.isSorting td:last-child {
 
 @keyframes gradient {
   0% {
-    background-position: 0% 50%;
+    background-position: 0 50%;
   }
   50% {
     background-position: 100% 50%;
   }
   100% {
-    background-position: 0% 50%;
+    background-position: 0 50%;
   }
 }
 
@@ -200,4 +201,25 @@ table.sortable.isSorting td:last-child {
 ::-webkit-scrollbar-thumb {
   @apply bg-gray-300;
   border-radius: 6px;
+}
+
+.bg-img-box {
+  overflow: hidden;
+}
+
+.bg-img-box:before {
+  content: '';
+  position: absolute;
+  left: -2rem;
+  right: -2rem;
+  bottom: -2rem;
+  height: 100%;
+  background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 40%);
+  z-index: 1;
+}
+
+@media(max-width: 860px) {
+  .bg-img-box:before {
+    height: 200%;
+  }
 }
