@@ -1,25 +1,19 @@
-import { useContext, useEffect, useState } from "react";
-import { FaPlay, FaSpinner, FaStop } from "react-icons/fa6";
+import {useContext, useEffect, useState} from "react";
+import {FaCommentSms, FaFacebookF, FaPlay, FaSpinner, FaStop} from "react-icons/fa6";
 import VolumeControl from "./VolumeControl";
 import Image from "next/image";
-import { PlayerContext } from "@/context/player";
-import { StationContext } from "@/context/station";
+import {PlayerContext} from "@/context/player";
+import {StationContext} from "@/context/station";
 import copy from 'clipboard-copy';
 import Popup from 'reactjs-popup';
 import 'reactjs-popup/dist/index.css';
+
 const PLAYER_ICONS = {
   PLAY: <FaPlay className="h-6 w-6" />,
   STOP: <FaStop className="h-6 w-6" />,
   SPINNER: <FaSpinner className="h-6 w-6 animate-spin" />,
 };
 const axios = require("axios");
-
-import {
-  FaFacebookF,
-  FaInstagram,
-  FaMusic,
-  FaCommentSms,
-} from "react-icons/fa6";
 
 const Player = () => {
   const { player, playerState, setPlayerIsLoaded, currentTrack } =
@@ -252,7 +246,7 @@ const Player = () => {
         <div className="relative flex w-full justify-between z-50">
           <a
             target="_blank"
-            className="flex items-center gap-6 group"
+            className="flex items-center gap-0 lg:gap-6 group"
             href={currentTrack.trackViewUrl}
           >
             <div className="relative">
@@ -265,7 +259,7 @@ const Player = () => {
               src={currentTrack.artworkURL}
             />
               {/* Social sharing icons on hover */}
-              <div className="social-icons-desktop-box lg:flex hidden absolute top-0 left-0 w-full h-full flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md">
+              <div className="social-icons-desktop-box lg:flex absolute top-0 left-0 w-full h-full flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md">
                 <p className="break-words font-semibold text-black drop-shadow-md truncate line-clamp-2 whitespace-normal md:text-2xl md:leading-normal">Share</p>
                 <div className="lg:flex w-full flex items-center justify-center gap-2 rounded-md">
                   <a
@@ -277,27 +271,27 @@ const Player = () => {
                     aria-label="Share on Facebook"
                     className="text-blue-600 hover:text-blue-600"
                   >
-                    <FaFacebookF size={23} />
+                    <FaFacebookF size={23}/>
                   </a>
                   {/*   {videoUrl && (
-                    <div className="mt-4">
-                      <video controls className="mb-4" width="300">
-                        <source src={videoUrl} type="video/mp4" />
-                      </video>
-                  <a
-                        href={`https://www.tiktok.com/upload?video=${encodeURIComponent(
-                          videoUrl
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="text-white hover:text-black bg-pink-500 p-2 rounded-full flex items-center"
-                        aria-label="Share to TikTok"
-                      >
-                        <FaMusic size={18} className="mr-2" />
-                        Share to TikTok
-                      </a>
-                    </div>
-                  )} */}
+                      <div className="mt-4">
+                        <video controls className="mb-4" width="300">
+                          <source src={videoUrl} type="video/mp4" />
+                        </video>
+                    <a
+                          href={`https://www.tiktok.com/upload?video=${encodeURIComponent(
+                            videoUrl
+                          )}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-white hover:text-black bg-pink-500 p-2 rounded-full flex items-center"
+                          aria-label="Share to TikTok"
+                        >
+                          <FaMusic size={18} className="mr-2" />
+                          Share to TikTok
+                        </a>
+                      </div>
+                    )} */}
                   <a
                     href={`https://www.tiktok.com/upload?video=${encodeURIComponent(
                       window.location.href
@@ -339,7 +333,7 @@ const Player = () => {
                     aria-label="Share via SMS"
                     className="text-green-600 hover:text-green-600"
                   >
-                    <FaCommentSms size={23} />
+                    <FaCommentSms size={23}/>
                   </a>
                   <a
                     href="#"
@@ -354,7 +348,8 @@ const Player = () => {
                     <div className="modal flex flex-column">
                       <div className="copy-preview">
                         <iframe className="copy-iframe" src={window.location.href} width="100%" height="100%"
-                          allowfullscreen webkitallowfullscreen frameborder="0" referrerpolicy="no-referrer-when-downgrade">
+                                allowfullscreen webkitallowfullscreen frameborder="0"
+                                referrerpolicy="no-referrer-when-downgrade">
                         </iframe>
                       </div>
                       <div className="flex copy-header">
@@ -365,9 +360,9 @@ const Player = () => {
                         </button>
                       </div>
                       <p className="copy-p">Copy & Paste this code to embed the player into your website.</p>
-                      <textarea className="copy-input w-full" type="text" value={iframeValue} >
-                        {iframeValue}
-                      </textarea>
+                      <textarea className="copy-input w-full" type="text" value={iframeValue}>
+                          {iframeValue}
+                        </textarea>
                       <button className="copy-button actions button text-white" onClick={iframeShare}>
                         {isCopied ? "Copied" : "Copy"}
                       </button>
@@ -405,6 +400,11 @@ const Player = () => {
         </div>
         <div className="absolute right-0 left-0 bottom-0 h-[50%] bg-gradient-to-b from-[transparent] to-[#000000ba] rounded-2xl lg:rounded-[35px]"></div>
         <div className="group playerBGContainer absolute right-0 left-0 bottom-0 top-0 bg-gradient-to-b from-[transparent] to-[#000000ba] rounded-2xl lg:rounded-[35px] overflow-hidden">
+          <div
+            className={"group absolute right-0 left-0 bottom-0 top-0 overflow-hidden bg-cover bg-center bg-no-repeat"}
+            style={{backgroundImage: 'linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 40%), url(' + currentTrack.artistImage + ')'}}
+          >
+            {/*
           <Image
             alt="Album artist image"
             priority
@@ -421,8 +421,10 @@ const Player = () => {
               objectFit: "cover",
             }}
           />
+          */}
               {/* Social sharing icons on hover */}
-              <div className="social-icons-mobile-box hidden absolute top-0 left-0 w-full h-full flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md">
+            <div
+              className="social-icons-mobile-box absolute top-0 left-0 w-full h-full flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md">
                 <p className="social-icons-desktop-share break-words font-semibold text-black drop-shadow-md truncate line-clamp-2 whitespace-normal md:text-2xl md:leading-normal">Share</p>
                 <div className="lg:flex w-full flex items-center justify-center gap-2 rounded-md">
                   <a
@@ -500,6 +502,7 @@ const Player = () => {
                   </a>
                 </div>
               </div>
+          </div>
         </div>
       </div>
       <div className="flex items-center justify-end gap-4 lg:hidden">
@@ -508,7 +511,7 @@ const Player = () => {
         </div>
         <button
           type="button"
-          className="rounded-full bg-white p-6 text-black shadow-xl transition-all duration-300 hover:scale-[1.07] md:p-10 z-20 -mt-8 mr-6 border-2 border-kl-primary bg-white"
+          className="rounded-full p-6 text-black shadow-xl transition-all duration-300 hover:scale-[1.07] md:p-10 z-20 -mt-8 mr-6 border-2 border-kl-primary bg-white"
           aria-label="play music"
           onClick={() => {
             togglePlayer();
