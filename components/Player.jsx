@@ -244,11 +244,7 @@ const Player = () => {
     <section className="mx-4 rounded-4xl md:mx-8">
       <div className="bg-img-box relative flex min-h-[205px] items-end rounded-2xl bg-black/25 bg-cover bg-center bg-no-repeat p-4 drop-shadow-2xl sm:min-h-[400px] md:p-8 lg:min-h-[670px] lg:rounded-[35px]">
         <div className="relative flex w-full justify-between z-50">
-          <a
-            target="_blank"
-            className="flex items-center gap-0 lg:gap-6 group"
-            href={currentTrack.trackViewUrl}
-          >
+          <div className="flex items-center gap-0 lg:gap-6 group">
             <div className="relative">
             <Image
               alt="Album thumbnail image"
@@ -379,7 +375,7 @@ const Player = () => {
                 {currentTrack.artistName}
               </p>
             </div>
-          </a>
+          </div>
           <div className="hidden items-center gap-4 self-end lg:flex">
             <div className="container mx-auto">
               <VolumeControl />
@@ -424,7 +420,7 @@ const Player = () => {
           */}
               {/* Social sharing icons on hover */}
             <div
-              className="social-icons-mobile-box absolute top-0 left-0 w-full h-full flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md">
+              className="social-icons-mobile-box absolute top-0 left-0 w-full h-full flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 lg:group-hover:opacity-0 transition-opacity duration-300 rounded-md">
                 <p className="social-icons-desktop-share break-words font-semibold text-black drop-shadow-md truncate line-clamp-2 whitespace-normal md:text-2xl md:leading-normal">Share</p>
                 <div className="lg:flex w-full flex items-center justify-center gap-2 rounded-md">
                   <a
