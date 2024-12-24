@@ -255,7 +255,7 @@ const Player = () => {
               src={currentTrack.artworkURL}
             />
               {/* Social sharing icons on hover */}
-              <div className="social-icons-desktop-box lg:flex absolute top-0 left-0 w-full h-full flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md">
+              <div className="social-icons-desktop-box hidden lg:flex absolute top-0 left-0 w-full h-full flex items-center justify-center gap-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300 rounded-md">
                 <p className="break-words font-semibold text-black drop-shadow-md truncate line-clamp-2 whitespace-normal md:text-2xl md:leading-normal">Share</p>
                 <div className="lg:flex w-full flex items-center justify-center gap-2 rounded-md">
                   <a
