@@ -1,8 +1,10 @@
-import { NextResponse } from "next/server";
-import { query } from "@/lib/db";
+import {NextResponse} from "next/server";
+import {query} from "@/lib/db";
+import {formatDateToMySQL} from "@/lib/utils";
+import moment from 'moment';
 import path from "path";
-import { existsSync } from "fs";
-import { unlink } from "fs/promises";
+import {existsSync} from "fs";
+import {unlink} from "fs/promises";
 
 const formatDateParam = (input) => {
   return input < 10 ? `0${input}` : input;
@@ -46,9 +48,63 @@ export async function GET(request, { params }) {
   }
 }
 
+export function addEventsBetweenDates(formData) {
+  const isUpdate = formData.get("_method") === "PUT";
+  const repeat = formData.get("repeat") !== 'false';
+  const daysOfWeek = {
+    "Sunday": 0, "Monday": 1, "Tuesday": 2, "Wednesday": 3, "Thursday": 4, "Friday": 5, "Saturday": 6
+  };
+
+  let selectedDays = [];
+  if (repeat) {
+    selectedDays = Object.keys(daysOfWeek).reduce((acc, day) => {
+      if (formData.get(day) === 'true') {
+        acc.push(daysOfWeek[day]);
+      }
+      return acc;
+    }, []);
+
+    if (formData.get("period") === 'weekends') {
+      selectedDays.push(6, 0);
+    }
+  }
+
+  const start = moment(formData.get("dateScheduled"));
+  const end = repeat && formData.get("dateScheduledEnd") ? moment(formData.get("dateScheduledEnd")) : start;
+  const eventsArray = [];
+  const step = repeat && formData.get("period") ? formData.get("period") : 'daily';
+
+  let incrementFunction;
+  switch (step) {
+    case 'weekly':
+      incrementFunction = (date) => date.setDate(date.getDate() + 7);
+      break;
+    case 'monthly':
+      incrementFunction = (date) => date.setMonth(date.getMonth() + 1);
+      break;
+    case 'daily':
+    default:
+      incrementFunction = (date) => date.setDate(date.getDate() + 1);
+      break;
+  }
+
+  let isFirstIteration = true;
+
+  for (let date = new Date(start); date <= end; incrementFunction(date)) {
+    if (isFirstIteration && isUpdate) {
+      isFirstIteration = false;
+      continue;
+    }
+    if (selectedDays.length === 0 || selectedDays.includes(date.getDay())) {
+      const values = [formData.get("stationId"), formData.get("trackId"), formData.get("artistId"), formData.get("trackName"), formData.get("artistName"), formData.get("trackViewUrl"), formData.get("artworkURL"), formatDateToMySQL(new Date(date)),];
+      eventsArray.push(`(${values.map(value => `'${value}'`).join(', ')})`);
+    }
+  }
+  return eventsArray.join(', ');
+}
+
 // To handle a POST request to /api/station/[stationId]/schedule
 export async function POST(request, { params }) {
-  const stationId = params.stationId;
   try {
     const formData = await request.formData();
 
@@ -56,47 +112,35 @@ export async function POST(request, { params }) {
       const trackId = formData.get("trackId");
       return await deleteTrack(trackId);
     }
-
-    let result = null;
-
-    if (formData.get("_method") === "PUT") {
-      const sql = `UPDATE scheduled_tracks SET trackId = ?, artistId = ?, trackName = ?, artistName = ?, trackViewUrl = ?, artworkURL = ?, dateScheduled = ? WHERE id = ?`;
-      const values = [
-        formData.get("trackId"),
-        formData.get("artistId"),
-        formData.get("trackName"),
-        formData.get("artistName"),
-        formData.get("trackViewUrl"),
-        formData.get("artworkURL"),
-        formData.get("dateScheduled"),
-        formData.get("id"),
-      ];
-
-      result = await query(sql, values);
-    } else {
-      const sql = `INSERT INTO scheduled_tracks (stationId, trackId, artistId, trackName, artistName, trackViewUrl, artworkURL, dateScheduled) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
-      const values = [
-        stationId,
-        formData.get("trackId"),
-        formData.get("artistId"),
-        formData.get("trackName"),
-        formData.get("artistName"),
-        formData.get("trackViewUrl"),
-        formData.get("artworkURL"),
-        formData.get("dateScheduled"),
-      ];
-      result = await query(sql, values);
+    const isUpdate = formData.get("_method") === "PUT";
+    if (isUpdate) {
+      const sqlUPDATE = `UPDATE scheduled_tracks 
+        SET stationId = ${formData.get("stationId")}, 
+        trackId = ${formData.get("trackId")}, 
+        artistId = ${formData.get("artistId")}, 
+        trackName = '${formData.get("trackName")}', 
+        artistName = '${formData.get("artistName")}', 
+        trackViewUrl = '${formData.get("trackViewUrl")}', 
+        artworkURL = '${formData.get("artworkURL")}', 
+        dateScheduled = '${formData.get("dateScheduled")}' 
+        WHERE id = ${formData.get("id")}`;
+      const resultUPDATE = await query(sqlUPDATE);
+      if (resultUPDATE.error) {
+        console.log(resultUPDATE.error)
+        return NextResponse.json({error: resultUPDATE.error}, {status: 400});
+      }
     }
 
+    const events = addEventsBetweenDates(formData);
+    const sql = `INSERT INTO scheduled_tracks (stationId, trackId, artistId, trackName, artistName, trackViewUrl, artworkURL, dateScheduled) VALUES ${events}`;
+    const result = (events) && await query(sql);
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 400 });
     }
-
     // get the inserted track
     const track = await query("SELECT * FROM scheduled_tracks WHERE id = ?", [
       result.insertId || formData.get("id"),
     ]);
-
     return NextResponse.json(track[0], { status: 200 });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 400 });

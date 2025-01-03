@@ -5,11 +5,11 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
 import BreadCrumb from "@/components/Breadcrumb";
-import { Heading } from "@/components/ui/heading";
-import { Separator } from "@/components/ui/separator";
-import { cn } from "@/lib/utils";
-import { Button, buttonVariants } from "@/components/ui/button";
-import { Edit, MoreHorizontal, Plus, Trash } from "lucide-react";
+import {Heading} from "@/components/ui/heading";
+import {Separator} from "@/components/ui/separator";
+import {cn} from "@/lib/utils";
+import {Button, buttonVariants} from "@/components/ui/button";
+import {Edit, MoreHorizontal, Plus, Trash} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,12 +19,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Image from "next/image";
-import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
-import { TrackForm } from "@/components/forms/track-form";
-import { Badge } from "@/components/ui/badge";
-import { AlertModal } from "@/components/modal/alert-modal";
-import { useToast } from "@/components/ui/use-toast";
+import {useParams} from "next/navigation";
+import {useEffect, useRef, useState} from "react";
+import {TrackForm} from "@/components/forms/track-form";
+import {Badge} from "@/components/ui/badge";
+import {AlertModal} from "@/components/modal/alert-modal";
+import {useToast} from "@/components/ui/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -32,7 +32,6 @@ import {
   DropdownMenuLabel,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { set } from "date-fns";
 
 const breadcrumbItems = [
   { title: "Station", link: "/admin/station" },
@@ -63,8 +62,7 @@ export default function SchedulePage() {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
-        let currentStation = data;
+        let currentStation = await response.json();
         setStation(currentStation);
       } catch (error) {
         console.error("Failed to fetch stations", error);
@@ -91,8 +89,7 @@ export default function SchedulePage() {
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`);
         }
-        const data = await response.json();
-        let currentTracks = data;
+        let currentTracks = await response.json();
         setTracks(currentTracks);
       } catch (error) {
         console.error("Failed to fetch tracks", error);
@@ -221,15 +218,17 @@ export default function SchedulePage() {
                       Add a track to the station schedule.
                     </DialogDescription>
                   </DialogHeader>
-                  <TrackForm
-                    track={currentTrack}
-                    setCurrentTrack={setCurrentTrack}
-                    station={station}
-                    selectedDate={selectedDate}
-                    setOpen={setOpen}
-                    setTracks={setTracks}
-                    setEvents={setEvents}
-                  />
+                  <div className={'w-full max-h-[60vh] overflow-auto'}>
+                    <TrackForm
+                      track={currentTrack}
+                      setCurrentTrack={setCurrentTrack}
+                      station={station}
+                      selectedDate={selectedDate}
+                      setOpen={setOpen}
+                      setTracks={setTracks}
+                      setEvents={setEvents}
+                    />
+                  </div>
                 </DialogContent>
               </Dialog>
             </div>
@@ -237,7 +236,7 @@ export default function SchedulePage() {
               {tracks &&
                 tracks.map((track, index) => (
                   <div key={`track-${index}`}>
-                    <div className="w-full my-2 flex w-full flex-1 items-center">
+                    <div className="w-full my-2 flex flex-1 items-center">
                       <Image
                         alt={track?.trackName || "Last Played"}
                         loading="lazy"
@@ -339,8 +338,5 @@ const formatTrackTime = (dateString) => {
   const secondsStr = seconds.length < 2 ? "0" + seconds : seconds;
 
   // Combine into the final formatted time
-  const formattedTime =
-    hours + ":" + minutesStr + ":" + secondsStr + " " + ampm;
-
-  return formattedTime;
+  return hours + ":" + minutesStr + ":" + secondsStr + " " + ampm;
 };

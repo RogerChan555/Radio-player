@@ -1,33 +1,162 @@
 "use client";
 
 import * as z from "zod";
-import { useRef, useState } from "react";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
-import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import { useToast } from "@/components/ui/use-toast";
+import {useEffect, useRef, useState} from "react";
+import {zodResolver} from "@hookform/resolvers/zod";
+import {useForm} from "react-hook-form";
+import {Input} from "@/components/ui/input";
+import {Button} from "@/components/ui/button";
+import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
+import {useToast} from "@/components/ui/use-toast";
 import Image from "next/image";
-import { DialogFooter } from "../ui/dialog";
-import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
-import { CalendarIcon } from "lucide-react";
-import { Calendar } from "../ui/calendar";
-import { cn } from "@/lib/utils";
-import { FaPencil } from "react-icons/fa6";
+import {DialogFooter} from "../ui/dialog";
+import {Popover, PopoverContent, PopoverTrigger} from "../ui/popover";
+import {CalendarIcon} from "lucide-react";
+import {Calendar} from "../ui/calendar";
+import {cn, formatDateToMySQL} from "@/lib/utils";
+import {FaPencil} from "react-icons/fa6";
+import * as Switch from "@radix-ui/react-switch";
+import * as RadioGroup from "@radix-ui/react-radio-group";
+import * as Checkbox from "@radix-ui/react-checkbox";
+import classNames from "classnames";
 
+const daysWeek = [
+  {
+    value: 'Sunday',
+  },
+  {
+    value: 'Monday',
+  },
+  {
+    value: 'Tuesday',
+  },
+  {
+    value: 'Wednesday',
+  },
+  {
+    value: 'Thursday',
+  },
+  {
+    value: 'Friday',
+  },
+  {
+    value: 'Saturday',
+  },
+];
+const period = [
+  {
+    value: 'not selected'
+  },
+  {
+    value: 'daily'
+  },
+  {
+    value: 'weekly'
+  },
+  {
+    value: 'monthly'
+  },
+  {
+    value: 'weekends'
+  },
+];
 const formSchema = z.object({
   trackName: z.string().min(1, { message: "Track name is required" }),
   artistName: z.string().min(1, { message: "Artist name is required" }),
   dateScheduled: z.date(),
+  dateScheduledEnd: z.date(),
+  repeat: z.boolean(),
+  period: z.string(),
+  Sunday: z.boolean(),
+  Monday: z.boolean(),
+  Tuesday: z.boolean(),
+  Wednesday: z.boolean(),
+  Thursday: z.boolean(),
+  Friday: z.boolean(),
+  Saturday: z.boolean(),
 });
+
+export const DaysItem = ({value, control}) => {
+  return (
+    <FormField
+      control={control}
+      name={value?.value}
+      render={({field}) => (
+        <>
+          <div className="flex items-center p-1">
+            <Checkbox.Root
+              className="size-4 appearance-none items-center justify-center rounded bg-white shadow-[0_2px_10px] shadow-blackA4 outline-none hover:bg-violet3 focus:shadow-[0_0_0_2px_black]"
+              onCheckedChange={(e) => {
+                field.onChange(e)
+              }}
+            >
+              <Checkbox.Indicator
+                className="relative flex size-full items-center justify-center after:block after:size-[11px] after:rounded-full after:bg-primary"/>
+            </Checkbox.Root>
+
+            <label
+              className="pl-4 text-sm leading-none"
+              htmlFor={value?.value}
+            >
+              {value?.value}
+            </label>
+          </div>
+        </>
+      )}
+    />
+  )
+}
+export const DaysGroup = ({control}) => {
+  return (
+    <div
+      className="grid grid-cols-3 gap-2.5 py-6"
+    >
+      {
+        daysWeek.map((e, i) => <DaysItem key={i} value={e} control={control}/>)
+      }
+    </div>
+  )
+}
+
+export const PeriodRadioItem = ({value, label}) => {
+  return (
+    <div className="flex items-center p-1">
+      <RadioGroup.Item
+        className="size-4 cursor-default rounded-full bg-white shadow-[0_2px_10px] shadow-blackA4 outline-none hover:bg-violet3 focus:shadow-[0_0_0_2px] focus:shadow-black"
+        value={value}
+        id={label}
+      >
+        <RadioGroup.Indicator
+          className="relative flex size-full items-center justify-center after:block after:size-[11px] after:rounded-full after:bg-primary"/>
+      </RadioGroup.Item>
+      <label
+        className="pl-4 text-sm leading-none"
+        htmlFor={label}
+      >
+        {label}
+      </label>
+    </div>
+  )
+}
+export const PeriodRadioGroup = ({field}) => {
+  return (
+    <RadioGroup.Root
+      name='period'
+      className="grid grid-cols-3 gap-2.5 py-6"
+      defaultValue={period[0].value}
+      onValueChange={(e) => {
+        field.onChange(e)
+      }}
+      aria-label="View density"
+    >
+      {
+        period.map((e, i) =>
+          <PeriodRadioItem key={i} value={e.value} label={e.value}/>
+        )
+      }
+    </RadioGroup.Root>
+  )
+}
 
 export const TrackForm = ({
   track,
@@ -43,8 +172,9 @@ export const TrackForm = ({
   const [searchLoading, setSearchLoading] = useState(false);
   const [loading, setLoading] = useState(false);
   const [calendarOpen, setCalendarOpen] = useState(false);
+  const [calendarOpenEnd, setCalendarOpenEnd] = useState(false);
   const [metadata, setMetadata] = useState(track ? track : null);
-
+  const [repeat, setRepeat] = useState(false);
   const fileInputRef = useRef(null);
 
   const toastMessage = track
@@ -52,24 +182,45 @@ export const TrackForm = ({
     : "Track added successfully.";
   const action = track ? "Update track" : "Add to schedule";
 
+  const daysDefaultValues = daysWeek.reduce((acc, e) => {
+    acc[e.value] = false;
+    return acc;
+  }, {});
+
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
+      ...daysDefaultValues,
       trackName: track?.trackName || "",
       artistName: track?.artistName || "",
       dateScheduled: track ? new Date(track.dateScheduled) : selectedDate,
+      dateScheduledEnd: track ? new Date(track.dateScheduled) : selectedDate,
+      repeat: false,
+      period: period[0].value,
     },
   });
+
+  useEffect(() => {
+    let formData = form.getValues();
+    if (formData.repeat !== repeat) {
+      setRepeat(formData.repeat);
+    }
+  }, [form.getValues()]);
 
   const onSubmit = async (data) => {
     try {
       setLoading(true);
-
       let formData = new FormData();
       formData.append("trackName", data.trackName);
       formData.append("artistName", data.artistName);
       formData.append("dateScheduled", formatDateToMySQL(data.dateScheduled));
+      formData.append("dateScheduledEnd", data.dateScheduledEnd && formatDateToMySQL(data.dateScheduledEnd));
       formData.append("stationId", station.id);
+      formData.append("repeat", data.repeat);
+      formData.append("period", data.period);
+      daysWeek.map((e) => {
+        formData.append([e.value], data[e.value])
+      });
 
       if (metadata) {
         formData.append("trackId", metadata.trackId);
@@ -157,7 +308,7 @@ export const TrackForm = ({
       setEvents((events) => {
         let eventFound = false;
         // format the date in YYYY-MM-DD
-        const formattedDate = result.dateScheduled.split(" ")[0];
+        const formattedDate = result?.dateScheduled.split(" ")[0];
         const updatedEvents = events.map((event) => {
           const formattedEvent = { ...event };
 
@@ -206,16 +357,6 @@ export const TrackForm = ({
     } finally {
       setLoading(false);
     }
-  };
-
-  function formatDateToMySQL(date) {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0"); // Months are 0-based in JS
-    const day = String(date.getDate()).padStart(2, "0");
-    const hours = String(date.getHours()).padStart(2, "0");
-    const minutes = String(date.getMinutes()).padStart(2, "0");
-    const seconds = String(date.getSeconds()).padStart(2, "0");
-    return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   }
 
   const searchMetadata = async () => {
@@ -264,7 +405,7 @@ export const TrackForm = ({
                 render={({ field }) => (
                   <FormItem>
                     <FormLabel>
-                      Scheduled DateTime:
+                      Scheduled DateTime Start:
                       <span className="text-red-500">*</span>
                     </FormLabel>
                     <Popover
@@ -335,7 +476,136 @@ export const TrackForm = ({
                   </FormItem>
                 )}
               />
+
+              <div className={'pt-9 flex items-center '}>
+                <FormField
+                  control={form.control}
+                  name="repeat"
+                  render={({field}) => (
+                    <>
+                      <Switch.Root
+                        className="relative h-[25px] w-[42px] cursor-default rounded-full bg-blackA6 shadow-[0_2px_10px] shadow-blackA4 outline-none focus:shadow-[0_0_0_2px] focus:shadow-black data-[state=checked]:bg-black"
+                        style={{"-webkit-tap-highlight-color": "rgba(0, 0, 0, 0)"}}
+                        checked={field.value}
+                        onCheckedChange={(e) => {
+                          field.onChange(e)
+                        }}
+                      >
+                        <Switch.Thumb
+                          className="block size-[21px] translate-x-0.5 rounded-full bg-white shadow-[0_2px_2px] shadow-blackA4 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[19px]"/>
+                      </Switch.Root>
+                      <label
+                        className="pl-4 leading-none"
+                        htmlFor="airplane-mode"
+                      >
+                        Repeat
+                      </label>
+                    </>
+                  )}
+                />
+              </div>
             </div>
+
+            <div className={classNames((!repeat) ? "invisible w-0 h-0" : "visible w-full h-auto")}>
+              <div className={"gap-8 md:grid md:grid-cols-2"}>
+                <FormField
+                  name="dateScheduledEnd"
+                  control={form.control}
+                  render={({field}) => (
+                    <FormItem>
+                      <FormLabel>
+                        Scheduled DateTime End:
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <Popover
+                        open={calendarOpenEnd}
+                        onOpenChange={(open) => setCalendarOpenEnd(open)}
+                      >
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                `${field.value.toLocaleString([], {
+                                  year: "numeric",
+                                  month: "numeric",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                  second: "2-digit",
+                                })}`
+                              ) : (
+                                <span>Select Date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50"/>
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+
+                        <PopoverContent>
+                          <Calendar
+                            className="p-0"
+                            mode="single"
+                            selected={field.value}
+                            onSelect={field.onChange}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                          />
+                          <Input
+                            type="time"
+                            step="1" // This allows selecting seconds in the time input
+                            className="mt-2"
+                            // take locale date time string in format that the input expects (24hr time)
+                            value={field.value?.toLocaleTimeString([], {
+                              hourCycle: "h23",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                            })}
+                            // take hours, minutes, and seconds and update our Date object then change date object to our new value
+                            onChange={(selectedTime) => {
+                              const currentTime = field.value;
+                              const [hours, minutes, seconds] =
+                                selectedTime.target.value.split(":");
+                              currentTime.setHours(
+                                parseInt(hours),
+                                parseInt(minutes),
+                                parseInt(seconds)
+                              );
+                              field.onChange(currentTime);
+                            }}
+                          />
+                        </PopoverContent>
+
+                      </Popover>
+                      <FormMessage/>
+                    </FormItem>
+                  )}
+                />
+              </div>
+              <div>
+                <FormField
+                  control={form.control}
+                  name="days"
+                  render={({field}) => (
+                    <DaysGroup field={field}/>
+                  )}
+                />
+                <FormField
+                  control={form.control}
+                  name='period'
+                  render={({field}) => (
+                    <PeriodRadioGroup field={field}/>
+                  )}
+                />
+              </div>
+            </div>
+
             <div className="relative w-[100px] md:w-[150px]">
               <Image
                 alt="Track Artwork"
