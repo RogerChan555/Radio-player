@@ -202,3 +202,18 @@ table.sortable.isSorting td:last-child {
   @apply bg-gray-300;
   border-radius: 6px;
 }
+
+.bg-img-box {
+  overflow: hidden;
+}
+
+.bg-img-box:before {
+  content: '';
+  position: absolute;
+  left: -2rem;
+  right: -2rem;
+  bottom: -2rem;
+  height: 100%;
+  background-image: linear-gradient(0deg, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0) 40%);
+  z-index: 1;
+}
