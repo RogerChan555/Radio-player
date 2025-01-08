@@ -37,9 +37,9 @@ export default function RootLayout({ children }) {
                 <main className="bg-[#121212] flex flex-col items-center">
                   <StationContainer />
                   <Stations />
+                  <UpNext />
                   <LastPlayed />
                   <StreamOnDemand />
-                  <UpNext />
                   <Advertisements />
                   {/* <NewThisWeek /> */}
                 </main>

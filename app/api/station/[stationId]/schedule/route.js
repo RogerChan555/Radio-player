@@ -1,10 +1,10 @@
-import {NextResponse} from "next/server";
-import {query} from "@/lib/db";
-import {formatDateToMySQL} from "@/lib/utils";
+import { NextResponse } from "next/server";
+import { query } from "@/lib/db";
+import { formatDateToMySQL } from "@/lib/utils";
 import moment from 'moment';
 import path from "path";
-import {existsSync} from "fs";
-import {unlink} from "fs/promises";
+import { existsSync } from "fs";
+import { unlink } from "fs/promises";
 
 const formatDateParam = (input) => {
   return input < 10 ? `0${input}` : input;
@@ -29,8 +29,8 @@ export async function GET(request, { params }) {
   try {
     // Execute SQL query to fetch the scheduled tracks from the database for the current month and get count of tracks for each day
     const tracks = await query(
-      `SELECT DAY(dateScheduled) as day, COUNT(*) as count FROM scheduled_tracks WHERE stationId = ? AND MONTH(dateScheduled) = ? GROUP BY DAY(dateScheduled)`,
-      [stationId, month]
+      `SELECT DAY(dateScheduled) as day, COUNT(*) as count FROM scheduled_tracks WHERE stationId = ? AND MONTH(dateScheduled) = ? AND YEAR(dateScheduled) = ? GROUP BY DAY(dateScheduled)`,
+      [stationId, month, year]
     );
 
     const transformedData = tracks.map((track) => {
@@ -48,60 +48,86 @@ export async function GET(request, { params }) {
   }
 }
 
+function generateUniqueVarchar20() {
+  return Math.random().toString(36).substr(2, 9) + Date.now().toString(36).substr(-11);
+}
+
 export function addEventsBetweenDates(formData) {
+  console.log(formData)
   const isUpdate = formData.get("_method") === "PUT";
-  const repeat = formData.get("repeat") !== 'false';
+  const repeat = formData.get("repeat") !== "false";
+  const period = formData.get("period"); // Either 'daily' or 'monthly'
+
   const daysOfWeek = {
-    "Sunday": 0, "Monday": 1, "Tuesday": 2, "Wednesday": 3, "Thursday": 4, "Friday": 5, "Saturday": 6
+    Sunday: 0,
+    Monday: 1,
+    Tuesday: 2,
+    Wednesday: 3,
+    Thursday: 4,
+    Friday: 5,
+    Saturday: 6,
   };
 
-  let selectedDays = [];
-  if (repeat) {
-    selectedDays = Object.keys(daysOfWeek).reduce((acc, day) => {
-      if (formData.get(day) === 'true') {
-        acc.push(daysOfWeek[day]);
-      }
-      return acc;
-    }, []);
+  // Collect selected days of the week (for daily scheduling)
+  const selectedDays = Object.keys(daysOfWeek).filter(
+    (day) => formData.get(day) === "true"
+  );
 
-    if (formData.get("period") === 'weekends') {
-      selectedDays.push(6, 0);
-    }
-  }
+  // Collect selected days of the month (for monthly scheduling)
+  const selectedDaysOfMonth = Array.from({ length: 31 }, (_, i) => `${i + 1}`).filter(
+    (day) => formData.get(day) === "true"
+  );
+
+  const includeLastDay = formData.get("Last Day") === "true";
 
   const start = moment(formData.get("dateScheduled"));
   const end = repeat && formData.get("dateScheduledEnd") ? moment(formData.get("dateScheduledEnd")) : start;
+
   const eventsArray = [];
-  const step = repeat && formData.get("period") ? formData.get("period") : 'daily';
+  let groupId = generateUniqueVarchar20();
 
-  let incrementFunction;
-  switch (step) {
-    case 'weekly':
-      incrementFunction = (date) => date.setDate(date.getDate() + 7);
-      break;
-    case 'monthly':
-      incrementFunction = (date) => date.setMonth(date.getMonth() + 1);
-      break;
-    case 'daily':
-    default:
-      incrementFunction = (date) => date.setDate(date.getDate() + 1);
-      break;
-  }
+  // Iterate through the date range
+  for (let date = new Date(start); date <= end; date.setDate(date.getDate() + 1)) {
+    if (isUpdate && date.toISOString() === start.toISOString()) continue; // Skip first iteration for updates
 
-  let isFirstIteration = true;
+    if (period === "daily") {
+      // Daily: Check if the current day matches the selected days
+      if (selectedDays.length === 0 || selectedDays.includes(Object.keys(daysOfWeek).find(day => daysOfWeek[day] === date.getDay()))) {
+        eventsArray.push(generateEventEntry(date, formData, groupId));
+      }
+    } else if (period === "monthly") {
+      // Monthly: Check if the current day matches the selected days of the month
+      const dayOfMonth = date.getDate();
+      const isLastDay = new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate() === dayOfMonth;
 
-  for (let date = new Date(start); date <= end; incrementFunction(date)) {
-    if (isFirstIteration && isUpdate) {
-      isFirstIteration = false;
-      continue;
-    }
-    if (selectedDays.length === 0 || selectedDays.includes(date.getDay())) {
-      const values = [formData.get("stationId"), formData.get("trackId"), formData.get("artistId"), formData.get("trackName"), formData.get("artistName"), formData.get("trackViewUrl"), formData.get("artworkURL"), formatDateToMySQL(new Date(date)),];
-      eventsArray.push(`(${values.map(value => `'${value}'`).join(', ')})`);
+      if (
+        selectedDaysOfMonth.includes(`${dayOfMonth}`) ||
+        (includeLastDay && isLastDay)
+      ) {
+        eventsArray.push(generateEventEntry(date, formData, groupId));
+      }
     }
   }
-  return eventsArray.join(', ');
+
+  return eventsArray.join(", ");
 }
+
+// Helper function to generate an event entry
+function generateEventEntry(date, formData, groupId) {
+  const values = [
+    formData.get("stationId"),
+    groupId,
+    formData.get("trackId"),
+    formData.get("artistId"),
+    formData.get("trackName"),
+    formData.get("artistName"),
+    formData.get("trackViewUrl"),
+    formData.get("artworkURL"),
+    formatDateToMySQL(new Date(date)),
+  ];
+  return `(${values.map((value) => `'${value}'`).join(", ")})`;
+}
+
 
 // To handle a POST request to /api/station/[stationId]/schedule
 export async function POST(request, { params }) {
@@ -127,12 +153,12 @@ export async function POST(request, { params }) {
       const resultUPDATE = await query(sqlUPDATE);
       if (resultUPDATE.error) {
         console.log(resultUPDATE.error)
-        return NextResponse.json({error: resultUPDATE.error}, {status: 400});
+        return NextResponse.json({ error: resultUPDATE.error }, { status: 400 });
       }
     }
 
     const events = addEventsBetweenDates(formData);
-    const sql = `INSERT INTO scheduled_tracks (stationId, trackId, artistId, trackName, artistName, trackViewUrl, artworkURL, dateScheduled) VALUES ${events}`;
+    const sql = `INSERT INTO scheduled_tracks (stationId, groupId, trackId, artistId, trackName, artistName, trackViewUrl, artworkURL, dateScheduled) VALUES ${events}`;
     const result = (events) && await query(sql);
     if (result.error) {
       return NextResponse.json({ error: result.error }, { status: 400 });
@@ -176,11 +202,23 @@ async function deleteTrack(trackId) {
         await unlink(filePath);
       }
     }
+    let queryStr = null;
+    let params = null;
 
+    if (track[0].groupId != null) {
+      let groupId = track[0].groupId;
+      queryStr = "DELETE FROM scheduled_tracks WHERE groupId = ?";
+      params = [groupId];
+    } else {
+      queryStr = "DELETE FROM scheduled_tracks WHERE id = ?";
+      params = [trackId];
+    }
+
+    if (!queryStr) {
+      return NextResponse.json({ error: 'Could not delete track/s' }, { status: 400 });
+    }
     // Execute SQL query to delete the track from the database
-    const result = await query("DELETE FROM scheduled_tracks WHERE id = ?", [
-      trackId,
-    ]);
+    const result = await query(queryStr, params);
 
     // Return the result of the delete operation
     return NextResponse.json(

@@ -5,11 +5,11 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
 
 import BreadCrumb from "@/components/Breadcrumb";
-import {Heading} from "@/components/ui/heading";
-import {Separator} from "@/components/ui/separator";
-import {cn} from "@/lib/utils";
-import {Button, buttonVariants} from "@/components/ui/button";
-import {Edit, MoreHorizontal, Plus, Trash} from "lucide-react";
+import { Heading } from "@/components/ui/heading";
+import { Separator } from "@/components/ui/separator";
+import { cn } from "@/lib/utils";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { Edit, MoreHorizontal, Plus, Trash } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -19,12 +19,12 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import Image from "next/image";
-import {useParams} from "next/navigation";
-import {useEffect, useRef, useState} from "react";
-import {TrackForm} from "@/components/forms/track-form";
-import {Badge} from "@/components/ui/badge";
-import {AlertModal} from "@/components/modal/alert-modal";
-import {useToast} from "@/components/ui/use-toast";
+import { useParams } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
+import { TrackForm } from "@/components/forms/track-form";
+import { Badge } from "@/components/ui/badge";
+import { AlertModal } from "@/components/modal/alert-modal";
+import { useToast } from "@/components/ui/use-toast";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -75,9 +75,7 @@ export default function SchedulePage() {
   useEffect(() => {
     const fetchTracks = async () => {
       let formattedDate = new Date(selectedDate);
-      formattedDate = `${formattedDate.getFullYear()}-${
-        formattedDate.getMonth() + 1
-      }-${formattedDate.getDate()}`;
+      formattedDate = formattedDate.toISOString().split('T')[0];
       try {
         const response = await fetch(
           `/api/station/${stationID}/schedule/${formattedDate}`,
@@ -100,7 +98,7 @@ export default function SchedulePage() {
   }, [stationID, selectedDate]);
 
   const handleDateClick = (arg) => {
-    const selectedCalendarDate = new Date(arg.dateStr);
+    const selectedCalendarDate = new Date(arg.date);
     setSelectedDate(selectedCalendarDate);
   };
 
@@ -108,12 +106,13 @@ export default function SchedulePage() {
   const handleMonthChange = async (arg) => {
     let startMonth = new Date(arg.start).getMonth();
     let endMonth = new Date(arg.end).getMonth();
-    let selectedMonth = Math.floor((startMonth + endMonth) / 2);
-    let selectedYear = new Date(arg.start).getFullYear();
+    let selectedMonth = endMonth//Math.floor((startMonth + endMonth) / 2);
+    let date = new Date(arg.start);
+    date.setMonth(date.getMonth() + 1); // Add one month
+    let selectedYear = date.getUTCFullYear(); // Get the year
     try {
       const response = await fetch(
-        `/api/station/${stationID}/schedule?month=${
-          selectedMonth + 1
+        `/api/station/${stationID}/schedule?month=${selectedMonth
         }&year=${selectedYear}`,
         {
           method: "GET",
@@ -175,7 +174,10 @@ export default function SchedulePage() {
       });
     }
   };
-
+  const handleDialogClose = () => {
+    setCurrentTrack(null); // Reset the current track when dialog closes
+    setOpen(false); // Close the dialog
+  };
   return (
     station && (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
@@ -203,20 +205,24 @@ export default function SchedulePage() {
                   {selectedDate ? selectedDate.toDateString() : ""}
                 </span>
               </div>
-              <Dialog open={open} onOpenChange={setOpen}>
+              <Dialog open={open} onOpenChange={(isOpen) => !isOpen && handleDialogClose()}>
+
                 <DialogTrigger asChild>
                   <Button
                     className={`${cn(buttonVariants({ variant: "default" }))}`}
+                    onClick={() => setOpen(true)}
                   >
                     <Plus className="h-4 w-4 mr-2" /> Add
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="max-w-[600px]">
+                <DialogContent className="max-w-[600px] overflow-hidden">
                   <DialogHeader>
-                    <DialogTitle>Add track</DialogTitle>
-                    <DialogDescription>
+                    <DialogTitle>{currentTrack ? "Update track" : "Add Track"}</DialogTitle>
+                    {!currentTrack && (
+                      <DialogDescription>
                       Add a track to the station schedule.
                     </DialogDescription>
+                    )}
                   </DialogHeader>
                   <div className={'w-full max-h-[60vh] overflow-auto'}>
                     <TrackForm
@@ -227,6 +233,8 @@ export default function SchedulePage() {
                       setOpen={setOpen}
                       setTracks={setTracks}
                       setEvents={setEvents}
+                      handleMonthChange={handleMonthChange}
+                      calendarRef={calendarRef}
                     />
                   </div>
                 </DialogContent>
@@ -315,6 +323,9 @@ export default function SchedulePage() {
 }
 
 const formatTrackTime = (dateString) => {
+  if (!dateString) {
+    return "Invalid time";
+  }
   let time = dateString.split(" ")[1];
   if (!time) {
     time = "00:00:00";

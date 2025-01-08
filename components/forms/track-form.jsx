@@ -1,20 +1,20 @@
 "use client";
 
 import * as z from "zod";
-import {useEffect, useRef, useState} from "react";
-import {zodResolver} from "@hookform/resolvers/zod";
-import {useForm} from "react-hook-form";
-import {Input} from "@/components/ui/input";
-import {Button} from "@/components/ui/button";
-import {Form, FormControl, FormField, FormItem, FormLabel, FormMessage,} from "@/components/ui/form";
-import {useToast} from "@/components/ui/use-toast";
+import { useEffect, useRef, useState } from "react";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form";
+import { useToast } from "@/components/ui/use-toast";
 import Image from "next/image";
-import {DialogFooter} from "../ui/dialog";
-import {Popover, PopoverContent, PopoverTrigger} from "../ui/popover";
-import {CalendarIcon} from "lucide-react";
-import {Calendar} from "../ui/calendar";
-import {cn, formatDateToMySQL} from "@/lib/utils";
-import {FaPencil} from "react-icons/fa6";
+import { DialogFooter } from "../ui/dialog";
+import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
+import { CalendarIcon } from "lucide-react";
+import { Calendar } from "../ui/calendar";
+import { cn, formatDateToMySQL } from "@/lib/utils";
+import { FaPencil } from "react-icons/fa6";
 import * as Switch from "@radix-ui/react-switch";
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import * as Checkbox from "@radix-ui/react-checkbox";
@@ -45,80 +45,151 @@ const daysWeek = [
 ];
 const period = [
   {
-    value: 'not selected'
-  },
-  {
     value: 'daily'
-  },
-  {
-    value: 'weekly'
   },
   {
     value: 'monthly'
   },
-  {
-    value: 'weekends'
-  },
 ];
 const formSchema = z.object({
+  ...Array.from({ length: 31 }, (_, i) => i + 1).reduce(
+    (acc, day) => {
+      acc[day] = z.boolean().default(false); // Validate as boolean
+      return acc;
+    },
+    { "Last Day": z.boolean().default(false) } // Add "Last Day"
+  ),
   trackName: z.string().min(1, { message: "Track name is required" }),
   artistName: z.string().min(1, { message: "Artist name is required" }),
   dateScheduled: z.date(),
   dateScheduledEnd: z.date(),
   repeat: z.boolean(),
   period: z.string(),
-  Sunday: z.boolean(),
-  Monday: z.boolean(),
-  Tuesday: z.boolean(),
-  Wednesday: z.boolean(),
-  Thursday: z.boolean(),
-  Friday: z.boolean(),
-  Saturday: z.boolean(),
+  Sunday: z.boolean().default(false),
+  Monday: z.boolean().default(false),
+  Tuesday: z.boolean().default(false),
+  Wednesday: z.boolean().default(false),
+  Thursday: z.boolean().default(false),
+  Friday: z.boolean().default(false),
+  Saturday: z.boolean().default(false),
 });
 
-export const DaysItem = ({value, control}) => {
+export const DaysItem = ({ value, control }) => {
   return (
     <FormField
       control={control}
       name={value?.value}
-      render={({field}) => (
-        <>
-          <div className="flex items-center p-1">
-            <Checkbox.Root
-              className="size-4 appearance-none items-center justify-center rounded bg-white shadow-[0_2px_10px] shadow-blackA4 outline-none hover:bg-violet3 focus:shadow-[0_0_0_2px_black]"
-              onCheckedChange={(e) => {
-                field.onChange(e)
-              }}
-            >
-              <Checkbox.Indicator
-                className="relative flex size-full items-center justify-center after:block after:size-[11px] after:rounded-full after:bg-primary"/>
-            </Checkbox.Root>
+      render={({ field }) => (
+        <div className="flex items-center p-1">
+          <Checkbox.Root
+            // Make sure the UI reflects the current boolean
+            checked={!!field.value}
+            // This updates the form state when checked/unchecked
+            onCheckedChange={(checked) => field.onChange(checked)}
+            className="size-4 appearance-none items-center justify-center rounded bg-white shadow-[0_2px_10px]"
+          >
+            <Checkbox.Indicator className="relative flex size-full items-center justify-center after:block after:size-[11px] after:rounded-full after:bg-primary" />
+          </Checkbox.Root>
 
-            <label
-              className="pl-4 text-sm leading-none"
-              htmlFor={value?.value}
-            >
-              {value?.value}
-            </label>
-          </div>
-        </>
+          <label className="pl-4 text-sm leading-none">
+            {value?.value}
+          </label>
+        </div>
       )}
     />
-  )
-}
-export const DaysGroup = ({control}) => {
-  return (
-    <div
-      className="grid grid-cols-3 gap-2.5 py-6"
-    >
-      {
-        daysWeek.map((e, i) => <DaysItem key={i} value={e} control={control}/>)
-      }
-    </div>
-  )
-}
+  );
+};
 
-export const PeriodRadioItem = ({value, label}) => {
+export const DaysGroup = ({ control, setValue }) => {
+  const checkDays = (days) => {
+    days.forEach((day) => {
+      setValue(day, true); // Set selected days to true
+    });
+  };
+
+  const uncheckAllDays = () => {
+    daysWeek.forEach((day) => {
+      setValue(day.value, false); // Uncheck all days
+    });
+  };
+
+  return (
+    <div>
+      {/* Weekly Button */}
+      <div className="flex gap-2 mb-4">
+        <Button
+          type="button"
+          onClick={() => {
+            uncheckAllDays();
+            checkDays(["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"]);
+          }}
+        >
+          Weekly (Mon-Fri)
+        </Button>
+
+        {/* Weekends Button */}
+        <Button
+          type="button"
+          onClick={() => {
+            uncheckAllDays();
+            checkDays(["Saturday", "Sunday"]);
+          }}
+        >
+          Weekends (Sat-Sun)
+        </Button>
+      </div>
+
+      {/* Days of the Week */}
+      <div className="grid grid-cols-3 gap-2.5 py-6">
+        {daysWeek.map((e, i) => (
+          <DaysItem key={i} value={e} control={control} />
+        ))}
+      </div>
+    </div>
+  );
+};
+
+
+export const DaysOfMonthItem = ({ value, control }) => {
+  return (
+    <FormField
+      control={control}
+      name={`${value}`} // Use the value directly as the field name
+      render={({ field }) => (
+        <div className="flex items-center p-1">
+          <Checkbox.Root
+            checked={field.value || false} // Default to `false` if undefined
+            className="size-4 appearance-none items-center justify-center rounded bg-white shadow-[0_2px_10px] shadow-blackA4 outline-none hover:bg-violet3 focus:shadow-[0_0_0_2px_black]"
+            onCheckedChange={field.onChange}
+          >
+            <Checkbox.Indicator
+              className="relative flex size-full items-center justify-center after:block after:size-[11px] after:rounded-full after:bg-primary"
+            />
+          </Checkbox.Root>
+
+          <label className="pl-4 text-sm leading-none" htmlFor={value}>
+            {value}
+          </label>
+        </div>
+      )}
+    />
+  );
+};
+
+
+export const DaysOfMonthGroup = ({ control }) => {
+  return (
+    <div className="grid grid-cols-5 gap-2.5 py-6">
+      {Array.from({ length: 31 }, (_, i) => i + 1).map((day) => (
+        <DaysOfMonthItem key={day} value={day} control={control} />
+      ))}
+      <DaysOfMonthItem key="Last Day" value="Last Day" control={control} />
+    </div>
+  );
+};
+
+
+export const PeriodRadioItem = ({ value, label }) => {
   return (
     <div className="flex items-center p-1">
       <RadioGroup.Item
@@ -127,7 +198,7 @@ export const PeriodRadioItem = ({value, label}) => {
         id={label}
       >
         <RadioGroup.Indicator
-          className="relative flex size-full items-center justify-center after:block after:size-[11px] after:rounded-full after:bg-primary"/>
+          className="relative flex size-full items-center justify-center after:block after:size-[11px] after:rounded-full after:bg-primary" />
       </RadioGroup.Item>
       <label
         className="pl-4 text-sm leading-none"
@@ -138,7 +209,7 @@ export const PeriodRadioItem = ({value, label}) => {
     </div>
   )
 }
-export const PeriodRadioGroup = ({field}) => {
+export const PeriodRadioGroup = ({ field }) => {
   return (
     <RadioGroup.Root
       name='period'
@@ -151,7 +222,7 @@ export const PeriodRadioGroup = ({field}) => {
     >
       {
         period.map((e, i) =>
-          <PeriodRadioItem key={i} value={e.value} label={e.value}/>
+          <PeriodRadioItem key={i} value={e.value} label={e.value} />
         )
       }
     </RadioGroup.Root>
@@ -166,6 +237,8 @@ export const TrackForm = ({
   setOpen,
   setTracks,
   setEvents,
+  handleMonthChange,
+  calendarRef,
 }) => {
   const { toast } = useToast();
   const trackArtworkRef = useRef();
@@ -183,14 +256,23 @@ export const TrackForm = ({
   const action = track ? "Update track" : "Add to schedule";
 
   const daysDefaultValues = daysWeek.reduce((acc, e) => {
-    acc[e.value] = false;
+    acc[e.value] = false; // Default unchecked
     return acc;
   }, {});
+  const dayOfSelectedDate = new Date(selectedDate).getDate(); // Extract the day of the month
 
+  const daysOfMonthDefaultValues = Array.from({ length: 31 }, (_, i) => i + 1).reduce(
+    (acc, day) => {
+      acc[day] = day === dayOfSelectedDate; // Set true for the selected day
+      return acc;
+    },
+    { "Last Day": false } // Add "Last Day" with default unchecked
+  );
   const form = useForm({
     resolver: zodResolver(formSchema),
     defaultValues: {
       ...daysDefaultValues,
+      ...daysOfMonthDefaultValues,
       trackName: track?.trackName || "",
       artistName: track?.artistName || "",
       dateScheduled: track ? new Date(track.dateScheduled) : selectedDate,
@@ -221,7 +303,12 @@ export const TrackForm = ({
       daysWeek.map((e) => {
         formData.append([e.value], data[e.value])
       });
+      Array.from({ length: 31 }, (_, i) => `${i + 1}`).forEach((day) => {
+        formData.append(day, data[day]);
+      });
 
+      // Append "Last Day"
+      formData.append("Last Day", data["Last Day"]);
       if (metadata) {
         formData.append("trackId", metadata.trackId);
         formData.append("artistId", metadata.artistId);
@@ -229,7 +316,7 @@ export const TrackForm = ({
         formData.append(
           "artworkURL",
           metadata.artworkUrl100?.replace("100x100", "600x600") ||
-            metadata.artworkURL
+          metadata.artworkURL
         );
       } else {
         formData.append("artworkURL", "/api/public" + station.thumbnail);
@@ -281,7 +368,7 @@ export const TrackForm = ({
       setTracks((tracks) => {
         result.artworkURL =
           process.env.NODE_ENV === "production" &&
-          result.artworkURL.startsWith("/schedule/")
+            result.artworkURL.startsWith("/schedule/")
             ? `/api/public${result.artworkURL}`
             : result.artworkURL;
         let filteredTracks = track
@@ -316,17 +403,15 @@ export const TrackForm = ({
             const formattedTrackDate = track.dateScheduled.split(" ")[0];
             if (formattedTrackDate === event.date) {
               const totalTracks = +event.title.split(" - ")[0] - 1;
-              formattedEvent.title = `${totalTracks} - Track${
-                totalTracks > 1 ? "s" : ""
-              }`;
+              formattedEvent.title = `${totalTracks} - Track${totalTracks > 1 ? "s" : ""
+                }`;
             }
           }
           if (event.date === formattedDate) {
             eventFound = true;
             const totalTracks = +event.title.split(" - ")[0] + 1;
-            formattedEvent.title = `${totalTracks} - Track${
-              totalTracks > 1 ? "s" : ""
-            }`;
+            formattedEvent.title = `${totalTracks} - Track${totalTracks > 1 ? "s" : ""
+              }`;
           }
           return formattedEvent;
         });
@@ -339,7 +424,10 @@ export const TrackForm = ({
         }
         return updatedEvents;
       });
-
+      handleMonthChange({
+        start: calendarRef.current.getApi().view.activeStart,
+        end: calendarRef.current.getApi().view.activeEnd,
+      });
       toast({
         variant: "success",
         title: "Success!",
@@ -476,42 +564,42 @@ export const TrackForm = ({
                   </FormItem>
                 )}
               />
-
-              <div className={'pt-9 flex items-center '}>
-                <FormField
-                  control={form.control}
-                  name="repeat"
-                  render={({field}) => (
-                    <>
-                      <Switch.Root
-                        className="relative h-[25px] w-[42px] cursor-default rounded-full bg-blackA6 shadow-[0_2px_10px] shadow-blackA4 outline-none focus:shadow-[0_0_0_2px] focus:shadow-black data-[state=checked]:bg-black"
-                        style={{"-webkit-tap-highlight-color": "rgba(0, 0, 0, 0)"}}
-                        checked={field.value}
-                        onCheckedChange={(e) => {
-                          field.onChange(e)
-                        }}
-                      >
-                        <Switch.Thumb
-                          className="block size-[21px] translate-x-0.5 rounded-full bg-white shadow-[0_2px_2px] shadow-blackA4 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[19px]"/>
-                      </Switch.Root>
-                      <label
-                        className="pl-4 leading-none"
-                        htmlFor="airplane-mode"
-                      >
-                        Repeat
-                      </label>
-                    </>
-                  )}
-                />
-              </div>
+              {!track && (
+                <div className={'pt-9 flex items-center '}>
+                  <FormField
+                    control={form.control}
+                    name="repeat"
+                    render={({ field }) => (
+                      <>
+                        <Switch.Root
+                          className="relative h-[25px] w-[42px] cursor-default rounded-full bg-blackA6 shadow-[0_2px_10px] shadow-blackA4 outline-none focus:shadow-[0_0_0_2px] focus:shadow-black data-[state=checked]:bg-black"
+                          style={{ "WebkitTapHighlightColor": "rgba(0, 0, 0, 0)" }}
+                          checked={field.value}
+                          onCheckedChange={(e) => {
+                            field.onChange(e)
+                          }}
+                        >
+                          <Switch.Thumb
+                            className="block size-[21px] translate-x-0.5 rounded-full bg-white shadow-[0_2px_2px] shadow-blackA4 transition-transform duration-100 will-change-transform data-[state=checked]:translate-x-[19px]" />
+                        </Switch.Root>
+                        <label
+                          className="pl-4 leading-none"
+                          htmlFor="airplane-mode"
+                        >
+                          Repeat
+                        </label>
+                      </>
+                    )}
+                  />
+                </div>
+              )}
             </div>
-
             <div className={classNames((!repeat) ? "invisible w-0 h-0" : "visible w-full h-auto")}>
               <div className={"gap-8 md:grid md:grid-cols-2"}>
                 <FormField
                   name="dateScheduledEnd"
                   control={form.control}
-                  render={({field}) => (
+                  render={({ field }) => (
                     <FormItem>
                       <FormLabel>
                         Scheduled DateTime End:
@@ -542,7 +630,7 @@ export const TrackForm = ({
                               ) : (
                                 <span>Select Date</span>
                               )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50"/>
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
                             </Button>
                           </FormControl>
                         </PopoverTrigger>
@@ -583,7 +671,7 @@ export const TrackForm = ({
                         </PopoverContent>
 
                       </Popover>
-                      <FormMessage/>
+                      <FormMessage />
                     </FormItem>
                   )}
                 />
@@ -591,18 +679,26 @@ export const TrackForm = ({
               <div>
                 <FormField
                   control={form.control}
-                  name="days"
-                  render={({field}) => (
-                    <DaysGroup field={field}/>
+                  name="period"
+                  render={({ field }) => (
+                    <PeriodRadioGroup
+                      field={{
+                        ...field,
+                        onChange: (value) => {
+                          field.onChange(value);
+                          form.setValue("period", value); // Update the form state
+                        },
+                      }}
+                    />
                   )}
                 />
-                <FormField
-                  control={form.control}
-                  name='period'
-                  render={({field}) => (
-                    <PeriodRadioGroup field={field}/>
-                  )}
-                />
+
+                {form.watch("period") !== "monthly" && (
+                  <DaysGroup control={form.control} setValue={form.setValue} />
+                )}
+                {form.watch("period") === "monthly" && (
+                  <DaysOfMonthGroup control={form.control} />
+                )}
               </div>
             </div>
 
@@ -685,15 +781,15 @@ export const TrackForm = ({
               />
             </div>
             <DialogFooter className="pt-8">
-              {form.getValues("trackName") && form.getValues("artistName") && (
-                <Button
-                  disabled={searchLoading}
-                  type="button"
-                  onClick={searchMetadata}
-                >
-                  Search metadata
-                </Button>
-              )}
+              {/* {form.getValues("trackName") && form.getValues("artistName") && ( */}
+              <Button
+                disabled={searchLoading}
+                type="button"
+                onClick={searchMetadata}
+              >
+                Search metadata
+              </Button>
+              {/* )} */}
               <Button disabled={loading} className="ml-auto" type="submit">
                 {action}
               </Button>

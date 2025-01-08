@@ -1,6 +1,7 @@
 CREATE TABLE IF NOT EXISTS scheduled_tracks (
     id INT PRIMARY KEY AUTO_INCREMENT,
     stationId INT,
+    groupId VARCHAR(20),
     trackId VARCHAR(20),
     artistId VARCHAR(20),
     trackName VARCHAR(255),
