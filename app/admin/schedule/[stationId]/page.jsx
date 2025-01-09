@@ -315,8 +315,8 @@ export default function SchedulePage() {
                                 className="rounded-md flex-shrink-0"
                               />
                               <div>
-                                <h3 className="text-sm md:text-base font-bold truncate">{track.trackName}</h3>
-                                <p className="text-xs md:text-sm text-gray-500 truncate">{track.artistName}</p>
+                                <h3 className="text-sm md:text-base font-bold truncate wrap-words">{track.trackName}</h3>
+                                <p className="text-xs md:text-sm text-gray-500 truncate wrap-words">{track.artistName}</p>
                               </div>
                             </div>
                           </td>
@@ -366,8 +366,8 @@ export default function SchedulePage() {
                             className="rounded-md flex-shrink-0"
                           />
                           <div className="flex-1">
-                            <h3 className="text-base font-bold truncate">{track.trackName}</h3>
-                            <p className="text-sm text-gray-500 truncate">{track.artistName}</p>
+                            <h3 className="text-base font-bold truncate wrap-words">{track.trackName}</h3>
+                            <p className="text-sm text-gray-500 truncate wrap-words">{track.artistName}</p>
                             <p className="text-sm mt-1 text-gray-600">Date: {formatTrackTime(track.dateScheduled).date} {formatTrackTime(track.dateScheduled).time}</p>
                             <div className="flex items-center space-x-4 mt-2">
                               <button
@@ -519,10 +519,10 @@ export default function SchedulePage() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                        <p className="text-sm font-bold truncate line-clamp-2 whitespace-normal md:text-base">
+                        <p className="text-sm font-bold truncate line-clamp-2 whitespace-normal md:text-base wrap-words" >
                           {track.trackName}
                         </p>
-                        <p className="text-sm opacity-60 truncate line-clamp-2 whitespace-normal md:text-base">
+                        <p className="text-sm opacity-60 truncate line-clamp-2 whitespace-normal md:text-base wrap-words">
                           {track.artistName}
                         </p>
                       </div>

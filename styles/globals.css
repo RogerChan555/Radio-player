@@ -28,7 +28,11 @@ a {
 .break-words {
   word-break: break-word;
 }
-
+.wrap-words{
+  word-wrap: break-word;
+  overflow-wrap: anywhere;
+  white-space: break-spaces;
+}
 table.sortable.isSorting td:last-child {
   display: none;
 }
