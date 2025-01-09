@@ -18,30 +18,42 @@ export async function GET(request, { params }) {
   const url = new URL(request.url);
   const month = url.searchParams.get("month");
   const year = url.searchParams.get("year");
-
-  if (!month || !year) {
-    return NextResponse.json(
-      { error: "Month and year parameters are required" },
-      { status: 400 }
-    );
+  const getAll = url.searchParams.get("getAll");
+  if (!getAll) {
+    if (!month || !year) {
+      return NextResponse.json(
+        { error: "Month and year parameters are required" },
+        { status: 400 }
+      );
+    }
   }
 
   try {
-    // Execute SQL query to fetch the scheduled tracks from the database for the current month and get count of tracks for each day
-    const tracks = await query(
-      `SELECT DAY(dateScheduled) as day, COUNT(*) as count FROM scheduled_tracks WHERE stationId = ? AND MONTH(dateScheduled) = ? AND YEAR(dateScheduled) = ? GROUP BY DAY(dateScheduled)`,
-      [stationId, month, year]
-    );
+    if (getAll) {
+      // Execute SQL query to fetch the scheduled tracks from the database for the current month and get count of tracks for each day
+      const tracks = await query(
+        `SELECT * FROM scheduled_tracks WHERE stationId = ? order by dateScheduled ASC`,
+        [stationId]
+      );
+      // Return the fetched tracks
+      return NextResponse.json(tracks, { status: 200 });
+    } else {
+      // Execute SQL query to fetch the scheduled tracks from the database for the current month and get count of tracks for each day
+      const tracks = await query(
+        `SELECT DAY(dateScheduled) as day, COUNT(*) as count FROM scheduled_tracks WHERE stationId = ? AND MONTH(dateScheduled) = ? AND YEAR(dateScheduled) = ? GROUP BY DAY(dateScheduled)`,
+        [stationId, month, year]
+      );
 
-    const transformedData = tracks.map((track) => {
-      return {
-        title: `${track.count} - Track${track.count > 1 ? "s" : ""}`,
-        date: `${year}-${formatDateParam(month)}-${formatDateParam(track.day)}`,
-      };
-    });
+      const transformedData = tracks.map((track) => {
+        return {
+          title: `${track.count} - Track${track.count > 1 ? "s" : ""}`,
+          date: `${year}-${formatDateParam(month)}-${formatDateParam(track.day)}`,
+        };
+      });
 
-    // Return the fetched tracks
-    return NextResponse.json(transformedData, { status: 200 });
+      // Return the fetched tracks
+      return NextResponse.json(transformedData, { status: 200 });
+    }
   } catch (error) {
     // Return error if any
     return NextResponse.json({ error: error.message }, { status: 400 });
@@ -133,10 +145,17 @@ function generateEventEntry(date, formData, groupId) {
 export async function POST(request, { params }) {
   try {
     const formData = await request.formData();
-
     if (formData.get("_method") === "DELETE") {
       const trackId = formData.get("trackId");
       return await deleteTrack(trackId);
+    }
+    if (formData.get("_method") === "DELETEGROUP") {
+      const trackId = formData.get("trackId");
+      return await deleteGroup(trackId);
+    }
+    if (formData.get("_method") === "DELETEALL") {
+      const stationId = formData.get("stationId");
+      return await deleteAllTracks(stationId);
     }
     const isUpdate = formData.get("_method") === "PUT";
     if (isUpdate) {
@@ -172,9 +191,59 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
-
-// To handle a DELETE request to /api/station/[stationId]/schedule
 async function deleteTrack(trackId) {
+  try {
+    if (!trackId) {
+      return NextResponse.json(
+        { error: "Track ID is required" },
+        { status: 400 }
+      );
+    }
+
+    const track = await query("SELECT * FROM scheduled_tracks WHERE id = ?", [
+      trackId,
+    ]);
+    if (!track.length) {
+      return NextResponse.json({ error: "Track not found" }, { status: 404 });
+    }
+    if (track.length === 1) {
+      if (track[0].artworkURL) {
+        const filePath = path.join(
+          process.cwd(),
+          "public",
+          "schedule",
+          track[0].artworkURL.split("/").pop()
+        );
+
+        if (existsSync(filePath)) {
+          await unlink(filePath);
+        }
+      }
+    }
+
+
+    let queryStr = "DELETE FROM scheduled_tracks WHERE id = ?";
+    let params = [trackId];
+
+
+    if (!queryStr) {
+      return NextResponse.json({ error: 'Could not delete track/s' }, { status: 400 });
+    }
+    // Execute SQL query to delete the track from the database
+    const result = await query(queryStr, params);
+
+    // Return the result of the delete operation
+    return NextResponse.json(
+      { message: "Track deleted successfully", result },
+      { status: 200 }
+    );
+  } catch (error) {
+    // Return error if any
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+}
+// To handle a DELETE request to /api/station/[stationId]/schedule
+async function deleteGroup(trackId) {
   try {
     if (!trackId) {
       return NextResponse.json(
@@ -230,3 +299,59 @@ async function deleteTrack(trackId) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
+
+async function deleteAllTracks(stationId) {
+  try {
+    if (!stationId) {
+      return NextResponse.json(
+        { error: "Station ID is required" },
+        { status: 400 }
+      );
+    }
+
+    // Fetch all tracks for the station
+    const tracks = await query(
+      "SELECT * FROM scheduled_tracks WHERE stationId = ?",
+      [stationId]
+    );
+
+    if (!tracks.length) {
+      return NextResponse.json(
+        { error: "No tracks found for the specified station" },
+        { status: 404 }
+      );
+    }
+
+    // Delete associated artwork files if they exist
+    for (const track of tracks) {
+      if (track.artworkURL) {
+        const filePath = path.join(
+          process.cwd(),
+          "public",
+          "schedule",
+          track.artworkURL.split("/").pop()
+        );
+
+        if (existsSync(filePath)) {
+          await unlink(filePath);
+        }
+      }
+    }
+
+    // Execute SQL query to delete all tracks for the station
+    const result = await query(
+      "DELETE FROM scheduled_tracks WHERE stationId = ?",
+      [stationId]
+    );
+
+    // Return success response
+    return NextResponse.json(
+      { message: "All tracks deleted successfully", result },
+      { status: 200 }
+    );
+  } catch (error) {
+    // Return error response
+    return NextResponse.json({ error: error.message }, { status: 400 });
+  }
+}
+

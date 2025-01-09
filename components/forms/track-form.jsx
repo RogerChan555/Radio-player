@@ -5,7 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Input } from "@/components/ui/input";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage, } from "@/components/ui/form";
 import { useToast } from "@/components/ui/use-toast";
 import Image from "next/image";
@@ -19,6 +19,7 @@ import * as Switch from "@radix-ui/react-switch";
 import * as RadioGroup from "@radix-ui/react-radio-group";
 import * as Checkbox from "@radix-ui/react-checkbox";
 import classNames from "classnames";
+import { AlertModal } from "@/components/modal/alert-modal";
 
 const daysWeek = [
   {
@@ -239,6 +240,8 @@ export const TrackForm = ({
   setEvents,
   handleMonthChange,
   calendarRef,
+  fetchAllTracks,
+  tracks,
 }) => {
   const { toast } = useToast();
   const trackArtworkRef = useRef();
@@ -428,6 +431,7 @@ export const TrackForm = ({
         start: calendarRef.current.getApi().view.activeStart,
         end: calendarRef.current.getApi().view.activeEnd,
       });
+      fetchAllTracks();
       toast({
         variant: "success",
         title: "Success!",
@@ -477,9 +481,62 @@ export const TrackForm = ({
     }
     setSearchLoading(false);
   };
+  const [deleteTrack, setDeleteTrack] = useState(null);
+  const onConfirm = async () => {
+    setLoading(true);
+    try {
+      let formData = new FormData();
+      formData.append("_method", "DELETE");
+      formData.append("trackId", deleteTrack);
+      const response = await fetch(`/api/station/${station.id}/schedule`, {
+        method: "POST",
+        body: formData,
+      });
+      console.log('delete')
+      if (!response.ok) {
+        const res = await response.json();
+        throw new Error(res.error || `Error deleting track`);
+      }
+      setLoading(false);
+      setDeleteTrack(null);
+      fetchAllTracks();
 
+      let updatedTracks = tracks.filter((track) => track.id !== deleteTrack);
+      setTracks(updatedTracks);
+      setOpen(false);
+      handleMonthChange({
+        start: calendarRef.current.getApi().view.activeStart,
+        end: calendarRef.current.getApi().view.activeEnd,
+      });
+
+      toast({
+        variant: "success",
+        title: "Success!",
+        description: `Track deleted successfully.`,
+        timeout: 10000,
+      });
+    } catch (error) {
+      console.error(`Error deleting track:`, error);
+      setLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: error.message || "An unknown error occurred.",
+        timeout: 10000,
+      });
+    }
+  };
   return (
     <>
+
+      <AlertModal
+        isOpen={deleteTrack}
+        onClose={() => setDeleteTrack(null)}
+        onConfirm={onConfirm}
+        loading={loading}
+        title="Are you absolutely sure?"
+        description="This action cannot be undone. This will permanently delete the track."
+      />
       <div className="grid gap-4 py-4">
         <Form {...form}>
           <form
@@ -780,19 +837,29 @@ export const TrackForm = ({
                 )}
               />
             </div>
-            <DialogFooter className="pt-8">
+            <DialogFooter className="pt-8 flex flex-start justify-between">
               {/* {form.getValues("trackName") && form.getValues("artistName") && ( */}
               <Button
+                className={`${cn(buttonVariants({ variant: "destructive" }))}`}
                 disabled={searchLoading}
                 type="button"
-                onClick={searchMetadata}
+                onClick={() => setDeleteTrack(track.id)}
               >
-                Search metadata
+                Delete Track
               </Button>
-              {/* )} */}
-              <Button disabled={loading} className="ml-auto" type="submit">
-                {action}
-              </Button>
+              <div className="flex gap-2">
+                <Button
+                  disabled={searchLoading}
+                  type="button"
+                  onClick={searchMetadata}
+                >
+                  Search metadata
+                </Button>
+                {/* )} */}
+                <Button disabled={loading} className="ml-auto" type="submit">
+                  {action}
+                </Button>
+              </div>
             </DialogFooter>
           </form>
         </Form>

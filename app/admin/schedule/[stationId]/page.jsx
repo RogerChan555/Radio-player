@@ -9,7 +9,7 @@ import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
 import { cn } from "@/lib/utils";
 import { Button, buttonVariants } from "@/components/ui/button";
-import { Edit, MoreHorizontal, Plus, Trash } from "lucide-react";
+import { Edit, MoreHorizontal, Plus, Trash, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -44,6 +44,7 @@ export default function SchedulePage() {
 
   const [loading, setLoading] = useState(false);
   const [deleteTrack, setDeleteTrack] = useState(null);
+  const [deleteAll, setDeleteAll] = useState(null);
   const [station, setStation] = useState(null);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [tracks, setTracks] = useState([]);
@@ -135,7 +136,7 @@ export default function SchedulePage() {
     setLoading(true);
     try {
       let formData = new FormData();
-      formData.append("_method", "DELETE");
+      formData.append("_method", "DELETEGROUP");
       formData.append("trackId", deleteTrack);
       const response = await fetch(`/api/station/${station.id}/schedule`, {
         method: "POST",
@@ -148,6 +149,7 @@ export default function SchedulePage() {
       }
       setLoading(false);
       setDeleteTrack(null);
+      fetchAllTracks();
 
       let updatedTracks = tracks.filter((track) => track.id !== deleteTrack);
       setTracks(updatedTracks);
@@ -169,7 +171,7 @@ export default function SchedulePage() {
       toast({
         variant: "destructive",
         title: "Uh oh! Something went wrong.",
-        description: "There was a problem with your request.",
+        description: error.message || "An unknown error occurred.",
         timeout: 10000,
       });
     }
@@ -177,6 +179,77 @@ export default function SchedulePage() {
   const handleDialogClose = () => {
     setCurrentTrack(null); // Reset the current track when dialog closes
     setOpen(false); // Close the dialog
+  };
+  const handleRemoveAll = async () => {
+    setLoading(true);
+    try {
+      let formData = new FormData();
+      formData.append("_method", "DELETEALL");
+      formData.append("stationId", deleteAll);
+      const response = await fetch(`/api/station/${station.id}/schedule`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const res = await response.json();
+        throw new Error(res.error || `Error removing all tracks`);
+      }
+
+      setLoading(false);
+      setTracks([]); // Clear the tracks list
+
+      handleMonthChange({
+        start: calendarRef.current.getApi().view.activeStart,
+        end: calendarRef.current.getApi().view.activeEnd,
+      });
+      setDeleteAll(null)
+      toast({
+        variant: "success",
+        title: "Success!",
+        description: `All tracks removed successfully.`,
+        timeout: 10000,
+      });
+    } catch (error) {
+      setDeleteAll(null)
+      console.log(`Error removing all tracks:`, error);
+      setLoading(false);
+      toast({
+        variant: "destructive",
+        title: "Uh oh! Something went wrong.",
+        description: error.message || "An unknown error occurred.",
+        timeout: 10000,
+      });
+    }
+  };
+  const [viewAllOpen, setViewAllOpen] = useState(false);
+  const [allTracks, setAllTracks] = useState([]);
+  const [loadingAllTracks, setLoadingAllTracks] = useState(false);
+  useEffect(() => {
+    if (viewAllOpen) {
+      fetchAllTracks(); // Fetch tracks only when dialog opens and not fetched yet
+    }
+  }, [viewAllOpen]);
+  const fetchAllTracks = async () => {
+    console.log("fetching all tracks")
+    try {
+      setLoadingAllTracks(true);
+      const response = await fetch(`/api/station/${stationID}/schedule?getAll=1`, {
+        method: "GET",
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const tracks = await response.json();
+      console.log(tracks)
+      setAllTracks(tracks);
+    } catch (error) {
+      console.error("Error fetching all tracks:", error);
+    } finally {
+      setLoadingAllTracks(false);
+    }
   };
   return (
     station && (
@@ -186,14 +259,173 @@ export default function SchedulePage() {
           onClose={() => setDeleteTrack(null)}
           onConfirm={onConfirm}
           loading={loading}
+          title="Are you absolutely sure?"
+          description="This action cannot be undone. This will permanently delete the track."
         />
+
+        <AlertModal
+          isOpen={deleteAll}
+          onClose={() => setDeleteAll(null)}
+          onConfirm={handleRemoveAll}
+          loading={loading}
+          title="Are you absolutely sure?"
+          description="This action cannot be undone. This will permanently delete all scheduled tracks for this station."
+        />
+        <Dialog
+          open={viewAllOpen}
+          onOpenChange={setViewAllOpen} // Simplify the handler
+        >
+          <DialogContent className="max-w-[90vw] md:max-w-[800px] p-4 overflow-auto">
+            <DialogHeader>
+              <DialogTitle className="text-lg md:text-xl font-bold">All Tracks</DialogTitle>
+              <DialogDescription className="text-sm md:text-base text-gray-600">
+                Below is the list of all tracks scheduled for this station.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="tracks-container max-h-[60vh] overflow-y-auto">
+              {allTracks.length > 0 ? (
+                <div className="overflow-x-auto">
+                  <table className="w-full table-auto border-collapse border border-gray-300 hidden md:table">
+                    {/* Table for medium and larger screens */}
+                    <thead className="bg-gray-100">
+                      <tr>
+                        <th className="border border-gray-300 px-4 py-2 text-left">Track</th>
+                        <th className="border border-gray-300 px-4 py-2 text-left" style={{ width: "150px" }}>
+                          Date Scheduled
+                        </th>
+                        <th className="border border-gray-300 px-4 py-2 text-left" style={{ width: "250px" }}>
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {allTracks.map((track, index) => (
+                        <tr
+                          key={`view-track-${index}`}
+                          className={`${index % 2 === 0 ? "bg-gray-50" : ""}`}
+                        >
+                          <td className="border border-gray-300 px-4 py-2">
+                            <div className="flex items-center space-x-4">
+                              <Image
+                                alt={track?.trackName || "Track Artwork"}
+                                src={track?.artworkURL || "/default-artwork.png"}
+                                width="50"
+                                height="50"
+                                className="rounded-md flex-shrink-0"
+                              />
+                              <div>
+                                <h3 className="text-sm md:text-base font-bold truncate">{track.trackName}</h3>
+                                <p className="text-xs md:text-sm text-gray-500 truncate">{track.artistName}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2 text-sm md:text-base">
+                          {formatTrackTime(track.dateScheduled).date}<br></br>
+                          {formatTrackTime(track.dateScheduled).time}
+                          </td>
+                          <td className="border border-gray-300 px-4 py-2">
+                            <div className="flex items-center space-x-2">
+                              <button
+                                title="Edit"
+                                onClick={() => {
+                                  setOpen(true);
+                                  setCurrentTrack(track);
+                                }}
+                                className="text-blue-600 hover:underline"
+                              >
+                                <div className="flex items-center gap-1"><Edit className="mr-1 md:mr-2 h-4 w-4" /> Update</div>
+                              </button>
+                              <button
+                                title="Delete"
+                                onClick={() => setDeleteTrack(track.id)}
+                                className="text-red-600 hover:underline"
+                              >
+                                <div className="flex items-center gap-1"><Trash className="h-4 w-4" /> Delete Group</div>
+                              </button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+
+                  {/* Mobile view */}
+                  <div className="block md:hidden space-y-4">
+                    {allTracks.map((track, index) => (
+                      <div
+                        key={`mobile-view-track-${index}`}
+                        className={`p-4 border rounded-lg ${index % 2 === 0 ? "bg-gray-50" : ""}`}
+                      >
+                        <div className="flex items-start space-x-4">
+                          <Image
+                            alt={track?.trackName || "Track Artwork"}
+                            src={track?.artworkURL || "/default-artwork.png"}
+                            width="50"
+                            height="50"
+                            className="rounded-md flex-shrink-0"
+                          />
+                          <div className="flex-1">
+                            <h3 className="text-base font-bold truncate">{track.trackName}</h3>
+                            <p className="text-sm text-gray-500 truncate">{track.artistName}</p>
+                            <p className="text-sm mt-1 text-gray-600">Date: {formatTrackTime(track.dateScheduled).date} {formatTrackTime(track.dateScheduled).time}</p>
+                            <div className="flex items-center space-x-4 mt-2">
+                              <button
+                                title="Edit"
+                                onClick={() => {
+                                  setOpen(true);
+                                  setCurrentTrack(track);
+                                }}
+                                className="text-blue-600 hover:underline flex items-center space-x-1"
+                              >
+                                <Edit className="h-4 w-4" />
+                                <span>Edit</span>
+                              </button>
+                              <button
+                                title="Delete"
+                                onClick={() => setDeleteTrack(track.id)}
+                                className="text-red-600 hover:underline flex items-center space-x-1"
+                              >
+                                <Trash className="h-4 w-4" />
+                                <span>Delete</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-sm md:text-base text-gray-500">No tracks available.</p>
+              )}
+            </div>
+          </DialogContent>
+
+
+        </Dialog>
         <BreadCrumb items={breadcrumbItems} />
 
-        <div className="flex items-start justify-between">
+        <div className="md:flex items-start justify-between">
           <Heading
             title={`${station.name} Schedule`}
             description="Manage station schedule."
           />
+          <div className="flex gap-2 items-center justify-end">
+            <Button
+              className={`${cn(buttonVariants({ variant: "secondary" }))}`}
+              onClick={() => setViewAllOpen(true)}
+            >
+              View All Tracks
+            </Button>
+            <Button
+              className={`${cn(buttonVariants({ variant: "destructive" }))}`}
+              onClick={() => setDeleteAll(stationID)}
+            >
+              <Trash className="h-4 w-4 mr-2" /> Remove All Tracks
+            </Button>
+          </div>
+
         </div>
         <Separator />
         <div className="flex flex-col-reverse md:flex-row gap-10">
@@ -220,8 +452,8 @@ export default function SchedulePage() {
                     <DialogTitle>{currentTrack ? "Update track" : "Add Track"}</DialogTitle>
                     {!currentTrack && (
                       <DialogDescription>
-                      Add a track to the station schedule.
-                    </DialogDescription>
+                        Add a track to the station schedule.
+                      </DialogDescription>
                     )}
                   </DialogHeader>
                   <div className={'w-full max-h-[60vh] overflow-auto'}>
@@ -235,6 +467,8 @@ export default function SchedulePage() {
                       setEvents={setEvents}
                       handleMonthChange={handleMonthChange}
                       calendarRef={calendarRef}
+                      fetchAllTracks={fetchAllTracks}
+                      tracks={tracks}
                     />
                   </div>
                 </DialogContent>
@@ -256,7 +490,7 @@ export default function SchedulePage() {
                       <div className="mx-4 w-full max-w-full">
                         <div className="flex items-center justify-between">
                           <Badge className="bg-green-700">
-                            {formatTrackTime(track.dateScheduled)}
+                            {formatTrackTime(track.dateScheduled).time}
                           </Badge>
                           <DropdownMenu modal={false}>
                             <DropdownMenuTrigger asChild>
@@ -280,7 +514,7 @@ export default function SchedulePage() {
                                 onClick={() => setDeleteTrack(track.id)}
                               >
                                 <Trash className="mr-2 h-4 w-4 text-red-500" />{" "}
-                                Delete
+                                Delete Group
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
@@ -324,30 +558,30 @@ export default function SchedulePage() {
 
 const formatTrackTime = (dateString) => {
   if (!dateString) {
-    return "Invalid time";
+    return { date: "Invalid date", time: "Invalid time" };
   }
-  let time = dateString.split(" ")[1];
-  if (!time) {
-    time = "00:00:00";
+
+  // Split the date and time
+  const [datePart, timePart] = dateString.split(" ");
+  
+  if (!datePart || !timePart) {
+    return { date: "Invalid date", time: "Invalid time" };
   }
-  let timeArray = time.split(":");
 
-  // Get hours, minutes, and seconds
-  let hours = timeArray[0];
-  let minutes = timeArray[1];
-  let seconds = timeArray[2];
+  // Parse and format the date
+  const date = new Date(datePart);
+  const formattedDate = date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+  });
 
-  // Determine AM or PM
+  // Parse and format the time
+  let [hours, minutes, seconds] = timePart.split(":");
   const ampm = hours >= 12 ? "PM" : "AM";
+  hours = hours % 12 || 12; // Convert to 12-hour format
+  const formattedTime = `${hours}:${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")} ${ampm}`;
 
-  // Convert hours from 24-hour format to 12-hour format
-  hours = hours % 12;
-  hours = hours ? hours : 12; // The hour '0' should be '12'
-
-  // Format minutes and seconds to always be two digits
-  const minutesStr = minutes.length < 2 ? "0" + minutes : minutes;
-  const secondsStr = seconds.length < 2 ? "0" + seconds : seconds;
-
-  // Combine into the final formatted time
-  return hours + ":" + minutesStr + ":" + secondsStr + " " + ampm;
+  return { date: formattedDate, time: formattedTime };
 };
+

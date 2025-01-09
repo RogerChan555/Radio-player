@@ -3,7 +3,14 @@ import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Modal } from "@/components/ui/modal";
 
-export const AlertModal = ({ isOpen, onClose, onConfirm, loading }) => {
+export const AlertModal = ({
+  isOpen,
+  onClose,
+  onConfirm,
+  loading,
+  title = "Are you sure?", // Default title
+  description = "This action cannot be undone.", // Default description
+}) => {
   const [isMounted, setIsMounted] = useState(false);
 
   useEffect(() => {
@@ -16,8 +23,8 @@ export const AlertModal = ({ isOpen, onClose, onConfirm, loading }) => {
 
   return (
     <Modal
-      title="Are you sure?"
-      description="This action cannot be undone."
+      title={title} // Use the dynamic title
+      description={description} // Use the dynamic description
       isOpen={isOpen}
       onClose={onClose}
     >
