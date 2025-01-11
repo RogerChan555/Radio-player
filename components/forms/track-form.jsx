@@ -573,7 +573,6 @@ export const TrackForm = ({
                                 day: "numeric",
                                 hour: "2-digit",
                                 minute: "2-digit",
-                                second: "2-digit",
                               })}`
                             ) : (
                               <span>Select Date</span>
@@ -593,14 +592,13 @@ export const TrackForm = ({
                         />
                         <Input
                           type="time"
-                          step="1" // This allows selecting seconds in the time input
+                          //step="1"// This allows selecting seconds in the time input
                           className="mt-2"
                           // take locale date time string in format that the input expects (24hr time)
                           value={field.value?.toLocaleTimeString([], {
                             hourCycle: "h23",
                             hour: "2-digit",
                             minute: "2-digit",
-                            second: "2-digit",
                           })}
                           // take hours, minutes, and seconds and update our Date object then change date object to our new value
                           onChange={(selectedTime) => {
@@ -682,7 +680,6 @@ export const TrackForm = ({
                                   day: "numeric",
                                   hour: "2-digit",
                                   minute: "2-digit",
-                                  second: "2-digit",
                                 })}`
                               ) : (
                                 <span>Select Date</span>
@@ -703,14 +700,13 @@ export const TrackForm = ({
                           />
                           <Input
                             type="time"
-                            step="1" // This allows selecting seconds in the time input
+                            //step="1" // This allows selecting seconds in the time input
                             className="mt-2"
                             // take locale date time string in format that the input expects (24hr time)
                             value={field.value?.toLocaleTimeString([], {
                               hourCycle: "h23",
                               hour: "2-digit",
                               minute: "2-digit",
-                              second: "2-digit",
                             })}
                             // take hours, minutes, and seconds and update our Date object then change date object to our new value
                             onChange={(selectedTime) => {

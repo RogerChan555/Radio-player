@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import path from "path";
-import { writeFile } from "fs/promises"; // Ensure you use the promises version of writeFile
+import { writeFile,mkdir  } from "fs/promises"; // Ensure you use the promises version of writeFile
 
 // To handle a POST request
 export async function POST(request) {
@@ -11,6 +11,8 @@ export async function POST(request) {
       if (file !== "undefined") {
         const fileBytes = await file.arrayBuffer();
         const fileBuffer = Buffer.from(fileBytes);
+        const dir = path.dirname(filePath);
+        await mkdir(dir, { recursive: true });
         await writeFile(filePath, fileBuffer);
         return `/schedule/${fileName}`;
       }
