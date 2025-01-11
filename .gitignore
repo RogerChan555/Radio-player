@@ -39,6 +39,7 @@ yarn-error.log*
 public/advertisements/thumbnail/*
 public/artists/*
 public/schedule/*
+public/stations/*
 
 # exception to the rule
 !public/artists/.gitkeep

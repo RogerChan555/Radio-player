@@ -322,7 +322,13 @@ export const TrackForm = ({
           metadata.artworkURL
         );
       } else {
-        formData.append("artworkURL", "/api/public" + station.thumbnail);
+        // Prepend /api/public only if needed.
+        const artworkURL = station.thumbnail.startsWith("/api/public")
+          ? station.thumbnail
+          : `/api/public${station.thumbnail}`;
+
+        formData.append("artworkURL", artworkURL);
+
       }
 
       if (fileInputRef.current.files[0]) {
