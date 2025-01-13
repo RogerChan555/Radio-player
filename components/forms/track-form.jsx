@@ -579,6 +579,7 @@ export const TrackForm = ({
                                 day: "numeric",
                                 hour: "2-digit",
                                 minute: "2-digit",
+                                //second: "2-digit",
                               })}`
                             ) : (
                               <span>Select Date</span>
@@ -614,7 +615,6 @@ export const TrackForm = ({
                             currentTime.setHours(
                               parseInt(hours),
                               parseInt(minutes),
-                              parseInt(seconds)
                             );
                             field.onChange(currentTime);
                           }}
@@ -686,6 +686,7 @@ export const TrackForm = ({
                                   day: "numeric",
                                   hour: "2-digit",
                                   minute: "2-digit",
+                                  //second: "2-digit",
                                 })}`
                               ) : (
                                 <span>Select Date</span>
@@ -722,7 +723,6 @@ export const TrackForm = ({
                               currentTime.setHours(
                                 parseInt(hours),
                                 parseInt(minutes),
-                                parseInt(seconds)
                               );
                               field.onChange(currentTime);
                             }}
