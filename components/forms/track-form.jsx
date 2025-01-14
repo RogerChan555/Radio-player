@@ -553,77 +553,99 @@ export const TrackForm = ({
               <FormField
                 name="dateScheduled"
                 control={form.control}
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>
-                      Scheduled DateTime Start:
-                      <span className="text-red-500">*</span>
-                    </FormLabel>
-                    <Popover
-                      open={calendarOpen}
-                      onOpenChange={(open) => setCalendarOpen(open)}
-                    >
-                      <PopoverTrigger asChild>
-                        <FormControl>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full pl-3 text-left font-normal",
-                              !field.value && "text-muted-foreground"
-                            )}
-                          >
-                            {field.value ? (
-                              `${field.value.toLocaleString([], {
-                                year: "numeric",
-                                month: "numeric",
-                                day: "numeric",
-                                hour: "2-digit",
-                                minute: "2-digit",
-                                //second: "2-digit",
-                              })}`
-                            ) : (
-                              <span>Select Date</span>
-                            )}
-                            <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                          </Button>
-                        </FormControl>
-                      </PopoverTrigger>
-                      <PopoverContent>
-                        <Calendar
-                          className="p-0"
-                          mode="single"
-                          selected={field.value}
-                          onSelect={field.onChange}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                        />
-                        <Input
-                          type="time"
-                          //step="1"// This allows selecting seconds in the time input
-                          className="mt-2"
-                          // take locale date time string in format that the input expects (24hr time)
-                          value={field.value?.toLocaleTimeString([], {
-                            hourCycle: "h23",
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })}
-                          // take hours, minutes, and seconds and update our Date object then change date object to our new value
-                          onChange={(selectedTime) => {
-                            const currentTime = field.value;
-                            const [hours, minutes, seconds] =
-                              selectedTime.target.value.split(":");
-                            currentTime.setHours(
-                              parseInt(hours),
-                              parseInt(minutes),
-                            );
-                            field.onChange(currentTime);
-                          }}
-                        />
-                      </PopoverContent>
-                    </Popover>
-                    <FormMessage />
-                  </FormItem>
-                )}
+                render={({ field }) => {
+                  const [tempTime, setTempTime] = useState(
+                    field.value
+                      ? field.value.toLocaleTimeString([], {
+                        hourCycle: "h23",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                      })
+                      : ""
+                  );
+
+                  return (
+                    <FormItem>
+                      <FormLabel>
+                        Scheduled DateTime Start:
+                        <span className="text-red-500">*</span>
+                      </FormLabel>
+                      <Popover
+                        open={calendarOpen}
+                        onOpenChange={(open) => setCalendarOpen(open)}
+                      >
+                        <PopoverTrigger asChild>
+                          <FormControl>
+                            <Button
+                              variant="outline"
+                              className={cn(
+                                "w-full pl-3 text-left font-normal",
+                                !field.value && "text-muted-foreground"
+                              )}
+                            >
+                              {field.value ? (
+                                `${field.value.toLocaleString([], {
+                                  year: "numeric",
+                                  month: "numeric",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}`
+                              ) : (
+                                <span>Select Date</span>
+                              )}
+                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                            </Button>
+                          </FormControl>
+                        </PopoverTrigger>
+                        <PopoverContent>
+                          <Calendar
+                            className="p-0"
+                            mode="single"
+                            selected={field.value}
+                            onSelect={(date) => {
+                              const updatedDate = new Date(date);
+                              if (field.value) {
+                                updatedDate.setHours(
+                                  field.value.getHours(),
+                                  field.value.getMinutes()
+                                );
+                              }
+                              field.onChange(updatedDate);
+                              setTempTime(
+                                updatedDate.toLocaleTimeString([], {
+                                  hourCycle: "h23",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })
+                              );
+                            }}
+                            disabled={(date) => date < new Date()}
+                            initialFocus
+                          />
+                          <Input
+                            type="time"
+                            className="mt-2"
+                            value={tempTime}
+                            onChange={(selectedTime) => {
+                              const inputTime = selectedTime.target.value;
+                              setTempTime(inputTime); // Update temporary time state
+
+                              // Validate and apply the time only if it's complete and valid
+                              if (/^\d{2}:\d{2}$/.test(inputTime)) {
+                                const [hours, minutes] = inputTime.split(":");
+                                const updatedDate = new Date(field.value || new Date());
+                                updatedDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+                                field.onChange(updatedDate); // Update the field value
+                              }
+                            }}
+                          />
+                        </PopoverContent>
+                      </Popover>
+                      <FormMessage />
+                    </FormItem>
+                  );
+                }}
               />
               {!track && (
                 <div className={'pt-9 flex items-center '}>
@@ -660,80 +682,102 @@ export const TrackForm = ({
                 <FormField
                   name="dateScheduledEnd"
                   control={form.control}
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>
-                        Scheduled DateTime End:
-                        <span className="text-red-500">*</span>
-                      </FormLabel>
-                      <Popover
-                        open={calendarOpenEnd}
-                        onOpenChange={(open) => setCalendarOpenEnd(open)}
-                      >
-                        <PopoverTrigger asChild>
-                          <FormControl>
-                            <Button
-                              variant="outline"
-                              className={cn(
-                                "w-full pl-3 text-left font-normal",
-                                !field.value && "text-muted-foreground"
-                              )}
-                            >
-                              {field.value ? (
-                                `${field.value.toLocaleString([], {
-                                  year: "numeric",
-                                  month: "numeric",
-                                  day: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit",
-                                  //second: "2-digit",
-                                })}`
-                              ) : (
-                                <span>Select Date</span>
-                              )}
-                              <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                            </Button>
-                          </FormControl>
-                        </PopoverTrigger>
+                  render={({ field }) => {
+                    const [tempTime, setTempTime] = useState(
+                      field.value
+                        ? field.value.toLocaleTimeString([], {
+                          hourCycle: "h23",
+                          hour: "2-digit",
+                          minute: "2-digit",
+                        })
+                        : ""
+                    );
 
-                        <PopoverContent>
-                          <Calendar
-                            className="p-0"
-                            mode="single"
-                            selected={field.value}
-                            onSelect={field.onChange}
-                            disabled={(date) => date < new Date()}
-                            initialFocus
-                          />
-                          <Input
-                            type="time"
-                            //step="1" // This allows selecting seconds in the time input
-                            className="mt-2"
-                            // take locale date time string in format that the input expects (24hr time)
-                            value={field.value?.toLocaleTimeString([], {
-                              hourCycle: "h23",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            })}
-                            // take hours, minutes, and seconds and update our Date object then change date object to our new value
-                            onChange={(selectedTime) => {
-                              const currentTime = field.value;
-                              const [hours, minutes, seconds] =
-                                selectedTime.target.value.split(":");
-                              currentTime.setHours(
-                                parseInt(hours),
-                                parseInt(minutes),
-                              );
-                              field.onChange(currentTime);
-                            }}
-                          />
-                        </PopoverContent>
+                    return (
+                      <FormItem>
+                        <FormLabel>
+                          Scheduled DateTime End:
+                          <span className="text-red-500">*</span>
+                        </FormLabel>
+                        <Popover
+                          open={calendarOpenEnd}
+                          onOpenChange={(open) => setCalendarOpenEnd(open)}
+                        >
+                          <PopoverTrigger asChild>
+                            <FormControl>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full pl-3 text-left font-normal",
+                                  !field.value && "text-muted-foreground"
+                                )}
+                              >
+                                {field.value ? (
+                                  `${field.value.toLocaleString([], {
+                                    year: "numeric",
+                                    month: "numeric",
+                                    day: "numeric",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })}`
+                                ) : (
+                                  <span>Select Date</span>
+                                )}
+                                <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
+                              </Button>
+                            </FormControl>
+                          </PopoverTrigger>
 
-                      </Popover>
-                      <FormMessage />
-                    </FormItem>
-                  )}
+                          <PopoverContent>
+                            <Calendar
+                              className="p-0"
+                              mode="single"
+                              selected={field.value}
+                              onSelect={(date) => {
+                                const updatedDate = new Date(date);
+                                if (field.value) {
+                                  updatedDate.setHours(
+                                    field.value.getHours(),
+                                    field.value.getMinutes()
+                                  );
+                                }
+                                field.onChange(updatedDate);
+                                setTempTime(
+                                  updatedDate.toLocaleTimeString([], {
+                                    hourCycle: "h23",
+                                    hour: "2-digit",
+                                    minute: "2-digit",
+                                  })
+                                );
+                              }}
+                              disabled={(date) => date < new Date()}
+                              initialFocus
+                            />
+                            <Input
+                              type="time"
+                              className="mt-2"
+                              value={tempTime}
+                              onChange={(selectedTime) => {
+                                const inputTime = selectedTime.target.value;
+                                setTempTime(inputTime); // Update temporary time state
+
+                                // Validate and apply the time only if it's complete and valid
+                                if (/^\d{2}:\d{2}$/.test(inputTime)) {
+                                  const [hours, minutes] = inputTime.split(":");
+                                  const updatedDate = new Date(field.value || new Date());
+                                  updatedDate.setHours(parseInt(hours, 10), parseInt(minutes, 10));
+                                  field.onChange(updatedDate); // Update with the new time
+                                }
+                              }}
+                            />
+                          </PopoverContent>
+                        </Popover>
+                        <FormMessage />
+                      </FormItem>
+                    );
+                  }}
                 />
+
               </div>
               <div>
                 <FormField
