@@ -20,7 +20,7 @@ import {
 } from "@/components/ui/dialog";
 import Image from "next/image";
 import { useParams } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { TrackForm } from "@/components/forms/track-form";
 import { Badge } from "@/components/ui/badge";
 import { AlertModal } from "@/components/modal/alert-modal";
@@ -225,11 +225,7 @@ export default function SchedulePage() {
   const [viewAllOpen, setViewAllOpen] = useState(false);
   const [allTracks, setAllTracks] = useState([]);
   const [loadingAllTracks, setLoadingAllTracks] = useState(false);
-  useEffect(() => {
-    if (viewAllOpen) {
-      fetchAllTracks(); // Fetch tracks only when dialog opens and not fetched yet
-    }
-  }, [viewAllOpen]);
+
   const fetchAllTracks = useCallback(async () => {
     console.log("fetching all tracks")
     try {
@@ -250,7 +246,12 @@ export default function SchedulePage() {
     } finally {
       setLoadingAllTracks(false);
     }
-  };
+  }, [stationID]); 
+  useEffect(() => {
+    if (viewAllOpen) {
+      fetchAllTracks(); // Fetch tracks only when dialog opens and not fetched yet
+    }
+  }, [viewAllOpen, fetchAllTracks]);
   return (
     station && (
       <div className="flex-1 space-y-4 p-4 pt-6 md:p-8">
