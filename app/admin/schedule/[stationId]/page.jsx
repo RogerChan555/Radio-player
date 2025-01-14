@@ -230,7 +230,7 @@ export default function SchedulePage() {
       fetchAllTracks(); // Fetch tracks only when dialog opens and not fetched yet
     }
   }, [viewAllOpen]);
-  const fetchAllTracks = async () => {
+  const fetchAllTracks = useCallback(async () => {
     console.log("fetching all tracks")
     try {
       setLoadingAllTracks(true);
