@@ -126,6 +126,7 @@ export function addEventsBetweenDates(formData) {
 
 // Helper function to generate an event entry
 function generateEventEntry(date, formData, groupId) {
+
   const values = [
     formData.get("stationId"),
     groupId,
@@ -137,7 +138,9 @@ function generateEventEntry(date, formData, groupId) {
     formData.get("artworkURL"),
     formatDateToMySQL(new Date(date)),
   ];
-  return `(${values.map((value) => `'${value}'`).join(", ")})`;
+
+  // Apply escaping to all values
+  return `(${values.map((value) => `'${escapeString(value)}'`).join(", ")})`;
 }
 
 
@@ -159,19 +162,24 @@ export async function POST(request, { params }) {
     }
     const isUpdate = formData.get("_method") === "PUT";
     if (isUpdate) {
+      
+      
       const sqlUPDATE = `UPDATE scheduled_tracks 
-        SET stationId = ${formData.get("stationId")}, 
-        trackId = ${formData.get("trackId")}, 
-        artistId = ${formData.get("artistId")}, 
-        trackName = '${formData.get("trackName")}', 
-        artistName = '${formData.get("artistName")}', 
-        trackViewUrl = '${formData.get("trackViewUrl")}', 
-        artworkURL = '${formData.get("artworkURL")}', 
-        dateScheduled = '${formData.get("dateScheduled")}' 
-        WHERE id = ${formData.get("id")}`;
+        SET 
+          stationId = '${escapeString(formData.get("stationId"))}', 
+          trackId = '${escapeString(formData.get("trackId"))}', 
+          artistId = '${escapeString(formData.get("artistId"))}', 
+          trackName = '${escapeString(formData.get("trackName"))}', 
+          artistName = '${escapeString(formData.get("artistName"))}', 
+          trackViewUrl = '${escapeString(formData.get("trackViewUrl"))}', 
+          artworkURL = '${escapeString(formData.get("artworkURL"))}', 
+          dateScheduled = '${escapeString(formData.get("dateScheduled"))}' 
+        WHERE id = '${escapeString(formData.get("id"))}'`;
+      
       const resultUPDATE = await query(sqlUPDATE);
+      
       if (resultUPDATE.error) {
-        console.log(resultUPDATE.error)
+        console.log(resultUPDATE.error);
         return NextResponse.json({ error: resultUPDATE.error }, { status: 400 });
       }
     }
@@ -191,6 +199,10 @@ export async function POST(request, { params }) {
     return NextResponse.json({ error: error.message }, { status: 400 });
   }
 }
+const escapeString = (value) => {
+  if (typeof value !== "string") return value; // If not a string, return as-is
+  return value.replace(/'/g, "''"); // Escape single quotes by replacing with double single quotes
+};
 async function deleteTrack(trackId) {
   try {
     if (!trackId) {

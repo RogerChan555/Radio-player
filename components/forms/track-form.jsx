@@ -322,10 +322,7 @@ export const TrackForm = ({
           metadata.artworkURL
         );
       } else {
-        // Prepend /api/public only if needed.
-        const artworkURL = station.thumbnail.startsWith("/api/public")
-          ? station.thumbnail
-          : `/api/public${station.thumbnail}`;
+        const artworkURL = station.thumbnail;
 
         formData.append("artworkURL", artworkURL);
 
