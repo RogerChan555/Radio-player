@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import path from "path";
 import { writeFile,mkdir  } from "fs/promises"; // Ensure you use the promises version of writeFile
+import crypto from "crypto";
 
 // To handle a POST request
 export async function POST(request) {
@@ -21,15 +22,24 @@ export async function POST(request) {
 
     const fileExtension = formData.get("thumbnail").type.split("/")[1];
 
+    const generateUniqueFilename = (extension) => {
+      const timestamp = Date.now();
+      const randomString = crypto.randomBytes(6).toString("hex"); // Generate a random 12-character hex string
+      return `${timestamp}_${randomString}_thumbnail.${extension}`;
+    };
+    
+    // Example usage
+    const fullFilePath = generateUniqueFilename(fileExtension);
+
     const result = await handleFileUpload(
       null,
       formData.get("thumbnail"),
-      `${Date.now()}_thumbnail.${fileExtension}`,
+      fullFilePath,
       path.join(
         process.cwd(),
         "public",
         "schedule",
-        `${Date.now()}_thumbnail.${fileExtension}`
+        fullFilePath
       )
     );
 
