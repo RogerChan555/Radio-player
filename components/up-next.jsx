@@ -47,9 +47,19 @@ const UpNext = () => {
                       />
                       <div className="mx-4 max-w-full">
                         <p className="text-sm text-white opacity-60 truncate line-clamp-2 whitespace-normal md:text-base">
-                          {new Date(
-                            track.dateScheduled.replace(" ", "T") + "Z"
-                          ).toLocaleString()}
+                          {track.dateScheduled
+                            ? new Date(
+                              track.dateScheduled.replace(" ", "T") + "Z"
+                            ).toLocaleString(undefined, {
+                              year: "numeric",
+                              month: "short",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                              second: "2-digit",
+                              hour12: true, // Optional: 12-hour format with AM/PM
+                            })
+                            : "Invalid date"}
                         </p>
                         <p className="text-sm font-bold text-white truncate line-clamp-2 whitespace-normal md:text-base">
                           {track.trackName}

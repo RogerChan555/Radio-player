@@ -562,27 +562,29 @@ const formatTrackTime = (dateString) => {
     return { date: "Invalid date", time: "Invalid time" };
   }
 
-  // Split the date and time
-  const [datePart, timePart] = dateString.split(" ");
-  
-  if (!datePart || !timePart) {
+  // Parse the full date and time string, ensuring it's treated as UTC
+  const parsedDate = new Date(dateString.replace(" ", "T") + "Z");
+  if (isNaN(parsedDate.getTime())) {
     return { date: "Invalid date", time: "Invalid time" };
   }
 
-  // Parse and format the date
-  const date = new Date(datePart);
-  const formattedDate = date.toLocaleDateString(undefined, {
+  // Format the date to the user's locale
+  const formattedDate = parsedDate.toLocaleDateString(undefined, {
     year: "numeric",
     month: "short",
     day: "numeric",
   });
 
-  // Parse and format the time
-  let [hours, minutes, seconds] = timePart.split(":");
-  const ampm = hours >= 12 ? "PM" : "AM";
-  hours = hours % 12 || 12; // Convert to 12-hour format
-  const formattedTime = `${hours}:${minutes.padStart(2, "0")}:${seconds.padStart(2, "0")} ${ampm}`;
+  // Format the time to the user's locale
+  const formattedTime = parsedDate.toLocaleTimeString(undefined, {
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+    hour12: true, // 12-hour format with AM/PM
+  });
 
   return { date: formattedDate, time: formattedTime };
 };
+
+
 

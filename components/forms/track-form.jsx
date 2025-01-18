@@ -13,7 +13,7 @@ import { DialogFooter } from "../ui/dialog";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { Calendar } from "../ui/calendar";
-import { cn, formatDateToMySQL } from "@/lib/utils";
+import { cn } from "@/lib/utils";
 import { FaPencil } from "react-icons/fa6";
 import * as Switch from "@radix-ui/react-switch";
 import * as RadioGroup from "@radix-ui/react-radio-group";
@@ -292,6 +292,11 @@ export const TrackForm = ({
     }
   }, [form.getValues()]);
 
+  const formatDateToMySQL = (date) => {
+    if (!date) return null;
+    const utcDate = new Date(date); // Convert to Date object (if not already)
+    return utcDate.toISOString().slice(0, 19).replace("T", " "); // MySQL format: YYYY-MM-DD HH:mm:ss
+  };
   const onSubmit = async (data) => {
     try {
       setLoading(true);
