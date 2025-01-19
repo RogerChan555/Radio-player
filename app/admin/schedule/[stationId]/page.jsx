@@ -310,7 +310,9 @@ export default function SchedulePage() {
                             <div className="flex items-center space-x-4">
                               <Image
                                 alt={track?.trackName || "Track Artwork"}
-                                src={track?.artworkURL || "/default-artwork.png"}
+                                src={track.artworkURL.startsWith("/schedule/")
+                                  ? `/api/public${track.artworkURL}`
+                                  : track.artworkURL || "/default-artwork.png"}
                                 width="50"
                                 height="50"
                                 className="rounded-md flex-shrink-0"
@@ -361,7 +363,9 @@ export default function SchedulePage() {
                         <div className="flex items-start space-x-4">
                           <Image
                             alt={track?.trackName || "Track Artwork"}
-                            src={track?.artworkURL || "/default-artwork.png"}
+                            src={track.artworkURL.startsWith("/schedule/")
+                              ? `/api/public${track.artworkURL}`
+                              : track.artworkURL || "/default-artwork.png"}
                             width="50"
                             height="50"
                             className="rounded-md flex-shrink-0"
@@ -486,7 +490,9 @@ export default function SchedulePage() {
                         width="100"
                         height="100"
                         className="flex aspect-square h-[50px] w-[50px] items-center justify-center md:h-[75px] md:w-[75px]"
-                        src={track.artworkURL}
+                        src={track.artworkURL.startsWith("/schedule/")
+                          ? `/api/public${track.artworkURL}`
+                          : track.artworkURL || "/default-artwork.png"}
                       />
                       <div className="mx-4 w-full max-w-full">
                         <div className="flex items-center justify-between">
