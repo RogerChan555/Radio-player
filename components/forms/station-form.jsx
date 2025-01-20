@@ -1,6 +1,7 @@
 "use client";
 import * as z from "zod";
 import { useEffect, useState } from "react";
+import Link from 'next/link';
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -259,9 +260,9 @@ export const StationForm = ({ initialData }) => {
     let refUrl = process.env.NEXT_PUBLIC_APP_URL + "/";
     refUrl += !isDefault
       ? name
-          .toLowerCase()
-          .replace(/ /g, "-")
-          .replace(/[^\w-]+/g, "")
+        .toLowerCase()
+        .replace(/ /g, "-")
+        .replace(/[^\w-]+/g, "")
       : "";
     form.setValue("refUrl", refUrl);
   };
@@ -270,6 +271,13 @@ export const StationForm = ({ initialData }) => {
     <>
       <div className="flex items-center justify-between">
         <Heading title={title} description={description} />
+        {stationID && (
+          <Link href={`/admin/schedule/${stationID}`} passHref>
+            <Button>Schedule</Button>
+          </Link>
+        )}
+
+
       </div>
       <Separator />
       <Form {...form}>
