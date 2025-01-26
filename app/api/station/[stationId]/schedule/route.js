@@ -12,13 +12,25 @@ const formatDateParam = (input) => {
 
 // To handle a GET request to /api/station/[stationId]
 export async function GET(request, { params }) {
-  const { stationId } = params;
+  const { stationId, offset } = params;
 
-  // Parse the request URL to get the query parameters
   const url = new URL(request.url);
   const month = url.searchParams.get("month");
   const year = url.searchParams.get("year");
   const getAll = url.searchParams.get("getAll");
+
+  const userOffset = url.searchParams.get("offset");
+
+    if (!userOffset) {
+      throw new Error("Offset parameter is required");
+    }
+
+    // Convert offset to hours
+    const offsetInHours = parseInt(userOffset, 10) / 60;
+
+  // Parse the request URL to get the query parameters
+  
+  
   if (!getAll) {
     if (!month || !year) {
       return NextResponse.json(
@@ -30,7 +42,7 @@ export async function GET(request, { params }) {
 
   try {
     if (getAll) {
-      // Execute SQL query to fetch the scheduled tracks from the database for the current month and get count of tracks for each day
+      // Execute SQL query to fetch all the scheduled tracks from the database for the station
       const tracks = await query(
         `SELECT * FROM scheduled_tracks WHERE stationId = ? order by dateScheduled ASC`,
         [stationId]
@@ -40,7 +52,16 @@ export async function GET(request, { params }) {
     } else {
       // Execute SQL query to fetch the scheduled tracks from the database for the current month and get count of tracks for each day
       const tracks = await query(
-        `SELECT DAY(dateScheduled) as day, COUNT(*) as count FROM scheduled_tracks WHERE stationId = ? AND MONTH(dateScheduled) = ? AND YEAR(dateScheduled) = ? GROUP BY DAY(dateScheduled)`,
+        `
+        SELECT 
+          DAY(DATE_ADD(dateScheduled, INTERVAL - ${offsetInHours} HOUR)) as day, 
+          COUNT(*) as count 
+        FROM scheduled_tracks 
+        WHERE stationId = ? 
+          AND MONTH(DATE_ADD(dateScheduled, INTERVAL - ${offsetInHours} HOUR)) = ? 
+          AND YEAR(DATE_ADD(dateScheduled, INTERVAL - ${offsetInHours} HOUR)) = ? 
+        GROUP BY DAY(DATE_ADD(dateScheduled, INTERVAL - ${offsetInHours} HOUR))
+        `,
         [stationId, month, year]
       );
 

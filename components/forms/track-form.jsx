@@ -20,6 +20,7 @@ import * as RadioGroup from "@radix-ui/react-radio-group";
 import * as Checkbox from "@radix-ui/react-checkbox";
 import classNames from "classnames";
 import { AlertModal } from "@/components/modal/alert-modal";
+import { formatTrackTime, formatDateToMySQL } from '@/utils/dateUtils';
 
 const daysWeek = [
   {
@@ -278,7 +279,7 @@ export const TrackForm = ({
       ...daysOfMonthDefaultValues,
       trackName: track?.trackName || "",
       artistName: track?.artistName || "",
-      dateScheduled: track ? new Date(track.dateScheduled) : selectedDate,
+      dateScheduled: track ? new Date(track.dateScheduled.replace(" ", "T") + "Z") : selectedDate,
       dateScheduledEnd: track ? new Date(track.dateScheduled) : selectedDate,
       repeat: false,
       period: period[0].value,
@@ -292,11 +293,7 @@ export const TrackForm = ({
     }
   }, [form.getValues()]);
 
-  const formatDateToMySQL = (date) => {
-    if (!date) return null;
-    const utcDate = new Date(date); // Convert to Date object (if not already)
-    return utcDate.toISOString().slice(0, 19).replace("T", " "); // MySQL format: YYYY-MM-DD HH:mm:ss
-  };
+
   const onSubmit = async (data) => {
     try {
       setLoading(true);

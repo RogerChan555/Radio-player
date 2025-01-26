@@ -3,7 +3,7 @@
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import interactionPlugin from "@fullcalendar/interaction";
-
+import { formatTrackTime } from '@/utils/dateUtils';
 import BreadCrumb from "@/components/Breadcrumb";
 import { Heading } from "@/components/ui/heading";
 import { Separator } from "@/components/ui/separator";
@@ -52,7 +52,7 @@ export default function SchedulePage() {
   const [open, setOpen] = useState(false);
   const [currentTrack, setCurrentTrack] = useState(null);
   const { toast } = useToast();
-
+  const userOffset = new Date().getTimezoneOffset();
   useEffect(() => {
     const fetchStation = async () => {
       try {
@@ -78,8 +78,9 @@ export default function SchedulePage() {
       let formattedDate = new Date(selectedDate);
       formattedDate = formattedDate.toISOString().split('T')[0];
       try {
+        
         const response = await fetch(
-          `/api/station/${stationID}/schedule/${formattedDate}`,
+          `/api/station/${stationID}/schedule/${formattedDate}?offset=${userOffset}`,
           {
             method: "GET",
           }
@@ -114,7 +115,7 @@ export default function SchedulePage() {
     try {
       const response = await fetch(
         `/api/station/${stationID}/schedule?month=${selectedMonth
-        }&year=${selectedYear}`,
+        }&year=${selectedYear}&offset=${userOffset}`,
         {
           method: "GET",
         }
@@ -562,35 +563,6 @@ export default function SchedulePage() {
     )
   );
 }
-
-const formatTrackTime = (dateString) => {
-  if (!dateString) {
-    return { date: "Invalid date", time: "Invalid time" };
-  }
-
-  // Parse the full date and time string, ensuring it's treated as UTC
-  const parsedDate = new Date(dateString.replace(" ", "T") + "Z");
-  if (isNaN(parsedDate.getTime())) {
-    return { date: "Invalid date", time: "Invalid time" };
-  }
-
-  // Format the date to the user's locale
-  const formattedDate = parsedDate.toLocaleDateString(undefined, {
-    year: "numeric",
-    month: "short",
-    day: "numeric",
-  });
-
-  // Format the time to the user's locale
-  const formattedTime = parsedDate.toLocaleTimeString(undefined, {
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-    hour12: true, // 12-hour format with AM/PM
-  });
-
-  return { date: formattedDate, time: formattedTime };
-};
 
 
 
